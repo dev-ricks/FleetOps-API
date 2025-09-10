@@ -1,5 +1,8 @@
 
 spring:
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+    enabled: true
   datasource:
     url: jdbc:postgresql://localhost:5432/fleetops
     username: postgres
@@ -8,6 +11,11 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+            jwk-set-uri: http://localhost:8081/.well-known/jwks.json
 
 server:
   port: 8080

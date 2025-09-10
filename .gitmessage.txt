@@ -1,0 +1,34 @@
+# Commit Message Template
+# -----------------------
+# Format:
+#   <category>(<scope>): <short summary>
+#
+# Example:
+#   feature(api): add /vehicles/scores endpoint
+#
+# Categories (choose one):
+#   feature             - a new feature
+#   fix                 - a bug fix
+#   performance         - performance improvements
+#   refactor            - restructuring code without changing behavior
+#   test                - adding or improving tests
+#   documentation       - documentation changes (JavaDocs, README, API docs)
+#   build               - build system changes (Maven, Gradle, Docker, etc.)
+#   ci-cd               - CI/CD pipeline changes
+#   chore               - routine maintenance (dependencies, cleanup, no code logic changes)
+#   configuration       - application or system configuration changes
+#   infrastructure      - infrastructure changes (Terraform, AWS, Kubernetes, networking, etc.)
+#   security            - authentication, authorization, or vulnerability fixes
+#   style               - formatting, naming, style-only changes
+#   revert              - reverting a previous commit
+#
+# <scope> is optional but recommended (e.g. api, db, frontend, security)
+#
+# -----------------------
+
+<category>(<scope>): <short summary>
+
+# Body (optional):
+# - Explain the reason for the change
+# - Provide additional context
+# - Reference related issues/tickets (e.g. "Closes #123")
