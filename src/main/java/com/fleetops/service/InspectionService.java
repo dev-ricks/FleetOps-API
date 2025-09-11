@@ -4,10 +4,13 @@ import com.fleetops.entity.Inspection;
 import com.fleetops.exception.InspectionNotFoundException;
 import com.fleetops.repository.InspectionRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
+@Transactional(readOnly = true)
 public class InspectionService {
 
     private final InspectionRepository inspectionRepository;
@@ -20,23 +23,72 @@ public class InspectionService {
         return inspectionRepository.findAll();
     }
 
-    public Inspection create(Inspection inspection) {
-        return inspectionRepository.save(inspection);
-    }
-
     public Inspection getById(Long id) {
+        Objects.requireNonNull(id, "Inspection Id must not be null");
         return inspectionRepository.findById(id).orElseThrow(() -> new InspectionNotFoundException("Inspection not found"));
     }
 
+    @Transactional
+    public Inspection create(Inspection inspection) {
+        Objects.requireNonNull(inspection, "Inspection must not be null");
+        if (inspection.getId() != null) {
+            throw new IllegalArgumentException("Inspection id must be null on create");
+        }
+        return inspectionRepository.save(inspection);
+    }
+
+    @Transactional
     public Inspection update(Long id, Inspection inspection) {
+        Objects.requireNonNull(inspection, "Inspection must not be null");
+        Objects.requireNonNull(id, "Id must not be null");
         Inspection existing = getById(id);
-        existing.setInspectionDate(inspection.getInspectionDate());
-        existing.setStatus(inspection.getStatus());
-        existing.setVehicle(inspection.getVehicle());
+        // Only update fields that are explicitly provided (non-null) to preserve existing values
+        if (inspection.getInspectionDate() != null) {
+            existing.setInspectionDate(inspection.getInspectionDate());
+        }
+        if (inspection.getStatus() != null) {
+            existing.setStatus(inspection.getStatus());
+        }
+        if (inspection.getVehicle() != null) {
+            existing.setVehicle(inspection.getVehicle());
+        }
         return inspectionRepository.save(existing);
     }
 
+    @Transactional
     public void delete(Long id) {
-        inspectionRepository.deleteById(id);
+        Objects.requireNonNull(id, "Inspection Id must not be null");
+        Inspection existing = inspectionRepository.findById(id)
+                .orElseThrow(() -> new InspectionNotFoundException("Inspection not found for deletion"));
+        inspectionRepository.delete(existing);
+    }
+
+    /**
+     * Demonstrates an atomic multistep operation that should fully roll back on failure.
+     * Steps:
+     *  1) Create a new inspection
+     *  2) Update an existing inspection
+     *  3) Delete another inspection
+     *  4) Throw an exception to force rollback
+     *
+     * Intended for use in integration tests that assert the database state is unchanged
+     * after this method throws.
+     */
+    public void compositeCreateUpdateDeleteThenFail(Inspection toCreate, Long idToUpdate, Long idToDelete) {
+        java.util.Objects.requireNonNull(toCreate, "toCreate must not be null");
+        java.util.Objects.requireNonNull(idToUpdate, "idToUpdate must not be null");
+        java.util.Objects.requireNonNull(idToDelete, "idToDelete must not be null");
+        // 1) Create
+        create(toCreate);
+        // 2) Update via service method
+        Inspection patch = new Inspection();
+        patch.setInspectionDate(toCreate.getInspectionDate());
+        patch.setStatus(toCreate.getStatus());
+        patch.setVehicle(toCreate.getVehicle());
+        update(idToUpdate, patch);
+        // 3) Delete via service method
+        delete(idToDelete);
+        // 4) Force failure to validate transactional rollback
+        throw new RuntimeException("Intentional failure to validate transactional rollback");
     }
 }
