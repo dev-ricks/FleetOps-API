@@ -9,7 +9,7 @@
     </option>
   </component>
   <component name="ProjectResources">
-    <resource url="Liquibase Changelog" location="$PROJECT_DIR$/../../../my-work-downloads/dbchangelog-4.9.xsd" />
+    <resource url="http://www.liquibase.org/xml/ns/dbchangelog" location="$PROJECT_DIR$/src/main/resources/liquibase/xsd/dbchangelog-4.9.xsd" />
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_23" default="true" project-jdk-name="openjdk-23" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />

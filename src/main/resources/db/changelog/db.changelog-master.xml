@@ -2,10 +2,7 @@
 <databaseChangeLog
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd"
-        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:noNamespaceSchemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog /liquibase/xsd/dbchangelog-4.9.xsd">
 
     <!-- 1 - create vehicle table -->
     <changeSet id="1-create-vehicle" author="dev-ricks">
