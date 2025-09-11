@@ -15,7 +15,12 @@ public class VehicleController {
         this.service = service;
     }
 
-    @GetMapping
+    @GetMapping("/{id}")
+    public Vehicle getById(@PathVariable Long id) {
+        return service.getById(id);
+    }
+
+    @GetMapping("/list")
     public List<Vehicle> list() {
         return service.getAll();
     }
@@ -23,5 +28,15 @@ public class VehicleController {
     @PostMapping
     public Vehicle create(@RequestBody Vehicle vehicle) {
         return service.create(vehicle);
+    }
+
+    @PutMapping("/{id}")
+    public Vehicle update(@PathVariable Long id, @RequestBody Vehicle vehicle) {
+        return service.update(id, vehicle);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        service.delete(id);
     }
 }
