@@ -2,12 +2,18 @@ package com.fleetops.controller;
 
 import com.fleetops.entity.Driver;
 import com.fleetops.service.DriverService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
+import org.springframework.http.MediaType;
+import jakarta.validation.Valid;
+import com.fleetops.dto.DriverRequest;
+import com.fleetops.dto.DriverResponse;
 
 @RestController
-@RequestMapping("/api/drivers")
+@RequestMapping(value = "/api/drivers", produces = MediaType.APPLICATION_JSON_VALUE)
 public class DriverController {
 
     private final DriverService service;
@@ -17,32 +23,53 @@ public class DriverController {
     }
 
     @GetMapping("/status")
-    public String getStatus() {
-        return "<font color=\"white\">Driver service is running.</font>";
+    public ResponseEntity<String> getStatus() {
+        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body("<font color=\"Red\">Driver service is running.</font>");
     }
 
     @GetMapping("/{id}")
-    public Driver getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ResponseEntity<DriverResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(toResponse(service.getById(id)));
     }
 
     @GetMapping("/list")
-    public List<Driver> list() {
-        return service.getAll();
+    public List<DriverResponse> list() {
+        return service.getAll().stream().map(this::toResponse).toList();
     }
 
-    @PostMapping
-    public Driver create(@RequestBody Driver driver) {
-        return service.create(driver);
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DriverResponse> create(@Valid @RequestBody DriverRequest request) {
+        Driver toSave = new Driver();
+        toSave.setName(request.getName());
+        toSave.setLicenseNumber(request.getLicenseNumber());
+        Driver saved = service.create(toSave);
+        URI location = org.springframework.web.util.UriComponentsBuilder
+                .newInstance()
+                .path("/api/drivers/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+        return ResponseEntity.created(location)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(toResponse(saved));
     }
 
     @PutMapping("/{id}")
-    public Driver update(@PathVariable Long id, @RequestBody Driver driver) {
-        return service.update(id, driver);
+    public ResponseEntity<DriverResponse> update(@PathVariable Long id, @RequestBody DriverRequest request) {
+        Driver patch = new Driver();
+        if (request.getName() != null) patch.setName(request.getName());
+        if (request.getLicenseNumber() != null) patch.setLicenseNumber(request.getLicenseNumber());
+        Driver updated = service.update(id, patch);
+        return ResponseEntity.ok(toResponse(updated));
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    private DriverResponse toResponse(Driver d) {
+        if (d == null) return null;
+        return new DriverResponse(d.getId(), d.getName(), d.getLicenseNumber());
     }
 }
