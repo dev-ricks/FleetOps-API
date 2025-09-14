@@ -1,17 +1,17 @@
 package com.fleetops.controller;
 
-import com.fleetops.entity.Vehicle;
-import com.fleetops.service.VehicleService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.net.URI;
-import java.util.List;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.http.MediaType;
-import jakarta.validation.Valid;
 import com.fleetops.dto.VehicleRequest;
 import com.fleetops.dto.VehicleResponse;
+import com.fleetops.entity.Vehicle;
+import com.fleetops.service.VehicleService;
+import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/vehicles", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -57,9 +57,15 @@ public class VehicleController {
     public ResponseEntity<VehicleResponse> update(@PathVariable Long id, @RequestBody VehicleRequest request) {
         Vehicle patch = new Vehicle();
         // Allow partial update: only set fields that are not null in request
-        if (request.getLicensePlate() != null) patch.setLicensePlate(request.getLicensePlate());
-        if (request.getMake() != null) patch.setMake(request.getMake());
-        if (request.getModel() != null) patch.setModel(request.getModel());
+        if (request.getLicensePlate() != null) {
+            patch.setLicensePlate(request.getLicensePlate());
+        }
+        if (request.getMake() != null) {
+            patch.setMake(request.getMake());
+        }
+        if (request.getModel() != null) {
+            patch.setModel(request.getModel());
+        }
         Vehicle updated = service.update(id, patch);
         return ResponseEntity.ok(toResponse(updated));
     }
@@ -71,7 +77,9 @@ public class VehicleController {
     }
 
     private VehicleResponse toResponse(Vehicle v) {
-        if (v == null) return null;
+        if (v == null) {
+            return null;
+        }
         return new VehicleResponse(v.getId(), v.getLicensePlate(), v.getMake(), v.getModel());
     }
 }

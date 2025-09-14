@@ -1,6 +1,12 @@
 package com.fleetops.service;
 
+import com.fleetops.dto.InspectionRequest;
 import com.fleetops.entity.Inspection;
+import com.fleetops.entity.Vehicle;
+import com.fleetops.exception.VehicleNotFoundException;
+import com.fleetops.exception.ServiceException;
+import com.fleetops.repository.VehicleRepository;
+import org.springframework.dao.DataAccessException;
 import com.fleetops.exception.InspectionNotFoundException;
 import com.fleetops.repository.InspectionRepository;
 import org.springframework.stereotype.Service;
@@ -14,9 +20,11 @@ import java.util.Objects;
 public class InspectionService {
 
     private final InspectionRepository inspectionRepository;
+    private final VehicleRepository vehicleRepository;
 
-    public InspectionService(InspectionRepository inspectionRepository) {
+    public InspectionService(InspectionRepository inspectionRepository, VehicleRepository vehicleRepository) {
         this.inspectionRepository = inspectionRepository;
+        this.vehicleRepository = vehicleRepository;
     }
 
     public List<Inspection> getAll() {
@@ -35,6 +43,26 @@ public class InspectionService {
             throw new IllegalArgumentException("Inspection id must be null on create");
         }
         return inspectionRepository.save(inspection);
+    }
+
+    @Transactional
+    public Inspection create(InspectionRequest request) {
+        Objects.requireNonNull(request, "InspectionRequest must not be null");
+        try {
+            if (request.getVehicleId() == null) {
+                throw new IllegalArgumentException("vehicleId must not be null");
+            }
+            Vehicle vehicleRef = vehicleRepository.getReferenceById(request.getVehicleId());
+            Inspection inspection = new Inspection();
+            inspection.setInspectionDate(request.getInspectionDate());
+            inspection.setStatus(normalizeStatus(request.getStatus()));
+            inspection.setVehicle(vehicleRef);
+            return inspectionRepository.save(inspection);
+        } catch (VehicleNotFoundException | IllegalArgumentException e) {
+            throw e;
+        } catch (DataAccessException dae) {
+            throw new ServiceException("Error creating inspection", dae);
+        }
     }
 
     @Transactional
@@ -91,4 +119,9 @@ public class InspectionService {
         // 4) Force failure to validate transactional rollback
         throw new RuntimeException("Intentional failure to validate transactional rollback");
     }
+
+    private String normalizeStatus(String status) {
+        return status == null ? null : status.trim().toUpperCase();
+    }
+
 }

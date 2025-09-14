@@ -3,6 +3,7 @@ package com.fleetops.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fleetops.controller.support.ControllerTestConfig;
 import com.fleetops.dto.InspectionRequest;
+import com.fleetops.dto.InspectionUpdateRequest;
 import com.fleetops.entity.Inspection;
 import com.fleetops.entity.Vehicle;
 import com.fleetops.exception.InspectionNotFoundException;
@@ -104,7 +105,7 @@ class InspectionControllerTest {
                 .inspectionDate(LocalDate.of(2025,3,3))
                 .status("PENDING")
                 .build();
-        given(inspectionService.create(any(Inspection.class))).willReturn(saved);
+        given(inspectionService.create(any(InspectionRequest.class))).willReturn(saved);
 
         mockMvc.perform(post("/api/inspections")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -115,15 +116,18 @@ class InspectionControllerTest {
                 .andExpect(jsonPath("$.id").value(10))
                 .andExpect(jsonPath("$.status").value("PENDING"));
 
-        ArgumentCaptor<Inspection> createCaptor = ArgumentCaptor.forClass(Inspection.class);
+        ArgumentCaptor<InspectionRequest> createCaptor = ArgumentCaptor.forClass(InspectionRequest.class);
         verify(inspectionService).create(createCaptor.capture());
-        org.assertj.core.api.Assertions.assertThat(createCaptor.getValue().getId()).isNull();
+        InspectionRequest sent = createCaptor.getValue();
+        org.assertj.core.api.Assertions.assertThat(sent.getVehicleId()).isEqualTo(1L);
+        org.assertj.core.api.Assertions.assertThat(sent.getStatus()).isEqualTo("PENDING");
+        org.assertj.core.api.Assertions.assertThat(sent.getInspectionDate()).isEqualTo(LocalDate.of(2025,3,3));
     }
 
     @Test
     @DisplayName("PUT /api/inspections/{id} updates an inspection")
     void update() throws Exception {
-        InspectionRequest patch = new InspectionRequest();
+        InspectionUpdateRequest patch = new InspectionUpdateRequest();
         patch.setStatus("UPDATED");
         Inspection updated = Inspection.builder().id(5L).inspectionDate(LocalDate.of(2025,1,1)).status("UPDATED").build();
         given(inspectionService.update(eq(5L), any(Inspection.class))).willReturn(updated);

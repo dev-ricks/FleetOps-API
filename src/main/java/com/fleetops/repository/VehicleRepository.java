@@ -10,11 +10,12 @@ import java.util.Optional;
 
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
-    Optional<Vehicle> findById(long id);
-
     Optional<Vehicle> findByLicensePlate(String licensePlate);
 
     @Query("select v from Vehicle v where exists (select i from Inspection i where i.vehicle = v and lower(i.status) = lower(:status))")
     List<Vehicle> findByInspectionStatus(@Param("status") String status);
 
+    boolean existsByLicensePlateAndIdNot(String licensePlate, Long id);
+
+    boolean existsByLicensePlate(String licensePlate);
 }

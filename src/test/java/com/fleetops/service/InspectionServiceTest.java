@@ -1,9 +1,12 @@
 package com.fleetops.service;
 
+import com.fleetops.dto.InspectionRequest;
 import com.fleetops.entity.Inspection;
 import com.fleetops.entity.Vehicle;
 import com.fleetops.exception.InspectionNotFoundException;
+import com.fleetops.exception.ServiceException;
 import com.fleetops.repository.InspectionRepository;
+import com.fleetops.repository.VehicleRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,6 +27,9 @@ class InspectionServiceTest {
 
     @Mock
     private InspectionRepository inspectionRepository;
+
+    @Mock
+    private VehicleRepository vehicleRepository;
 
     @InjectMocks
     private InspectionService inspectionService;
@@ -149,13 +155,15 @@ class InspectionServiceTest {
     class Create {
         @Test
         void create_WhenInspectionIsNull_ShouldThrowNullPointerException_AndNotCallRepository() {
-            assertThrows(NullPointerException.class, () -> inspectionService.create(null));
+            Inspection inspection = null;
+            assertThrows(NullPointerException.class, () -> inspectionService.create(inspection));
             verifyNoInteractions(inspectionRepository);
         }
         
         @Test
         void create_WhenIdIsNull_ShouldThrowNullPointerException() {
-            assertThrows(NullPointerException.class, () -> inspectionService.create(null));
+            Inspection inspection = null;
+            assertThrows(NullPointerException.class, () -> inspectionService.create(inspection));
         }
 
         @Test

@@ -2,12 +2,15 @@ package com.fleetops.controller;
 
 import com.fleetops.exception.LicensePlateAlreadyExistsException;
 import com.fleetops.exception.NotFoundExceptionBase;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -57,13 +60,7 @@ public class GlobalControllerExceptionHandler {
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", "Bad Request");
         body.put("message", "Validation failed");
-        body.put("fields", ex.getBindingResult().getFieldErrors().stream()
-                .collect(Collectors.toMap(
-                        fe -> fe.getField(),
-                        fe -> fe.getDefaultMessage(),
-                        (a, b) -> a
-                )));
-        return ResponseEntity.badRequest().body(body);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -74,11 +71,21 @@ public class GlobalControllerExceptionHandler {
         body.put("error", "Bad Request");
         body.put("message", "Constraint violation");
         body.put("violations", ex.getConstraintViolations().stream()
-                .collect(Collectors.toMap(
-                        v -> v.getPropertyPath().toString(),
-                        v -> v.getMessage(),
-                        (a, b) -> a
-                )));
+                                 .collect(Collectors.toMap(
+                                         v -> v.getPropertyPath().toString(),
+                                         v -> v.getMessage(),
+                                         (a, b) -> a
+                                                          )));
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleBadJson(HttpMessageNotReadableException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+        body.put("message", "Malformed JSON request");
         return ResponseEntity.badRequest().body(body);
     }
 }

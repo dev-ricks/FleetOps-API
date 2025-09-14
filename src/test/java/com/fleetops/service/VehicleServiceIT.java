@@ -1,22 +1,19 @@
 package com.fleetops.service;
 
 import com.fleetops.entity.Vehicle;
-import com.fleetops.exception.LicensePlateAlreadyExistsException;
-import com.fleetops.exception.VehicleNotFoundException;
+import com.fleetops.exception.*;
 import com.fleetops.repository.VehicleRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +30,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class VehicleServiceIT {
 
     @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
     private VehicleService vehicleService;
 
     @Autowired
@@ -44,10 +44,12 @@ class VehicleServiceIT {
     void setUp() {
         vehicleRepository.deleteAll();
         existing = vehicleRepository.save(vehicle("ABC-123", "Toyota", "Corolla"));
+        vehicleRepository.save(vehicle("DUP-111", "Ford",
+                                       "Focus")); // allows for some update tests to try duplicate license plate testing
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected Vehicle findFresh(Long id) {
+        entityManager.clear();
         return vehicleRepository.findById(id).orElseThrow();
     }
 
@@ -87,10 +89,10 @@ class VehicleServiceIT {
                         throw new DataIntegrityViolationException("simulated duplicate");
                     }
                     if (plate != null && plate.startsWith("ERR")) {
-                        throw new RuntimeException("boom");
+                        throw new DataAccessResourceFailureException("simulated repository failure");
                     }
                 }
-                throw new RuntimeException("boom");
+                throw new DataAccessResourceFailureException("simulated repository failure");
             }
             return pjp.proceed();
         }
@@ -129,8 +131,7 @@ class VehicleServiceIT {
             SaveFailureAspectConfig.FAIL_SAVE.set(true);
             try {
                 Vehicle toCreate = vehicle("ERR-500", "Err", "Err");
-                RuntimeException ex = assertThrows(RuntimeException.class, () -> vehicleService.create(toCreate));
-                assertTrue(ex.getMessage().startsWith("Error creating vehicle:"));
+                assertThrows(ServiceException.class, () -> vehicleService.create(toCreate));
             } finally {
                 SaveFailureAspectConfig.FAIL_SAVE.set(false);
             }
@@ -203,14 +204,13 @@ class VehicleServiceIT {
         }
 
         @Test
-        void update_WhenUnexpectedRepositoryError_ShouldWrapAndPropagate() {
+        void update_WhenUnexpectedRepositoryError_ShouldWrapInServiceException_AndPropagate() {
             SaveFailureAspectConfig.FAIL_SAVE.set(true);
             try {
                 Long id = existing.getId();
                 Vehicle patch = new Vehicle();
                 patch.setLicensePlate("ERR-500");
-                RuntimeException ex = assertThrows(RuntimeException.class, () -> vehicleService.update(id, patch));
-                assertTrue(ex.getMessage().startsWith("Error updating vehicle:"));
+                assertThrows(ServiceException.class, () -> vehicleService.update(id, patch));
             } finally {
                 SaveFailureAspectConfig.FAIL_SAVE.set(false);
             }

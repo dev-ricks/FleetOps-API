@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fleetops.controller.support.ControllerTestConfig;
 import com.fleetops.dto.DriverRequest;
 import com.fleetops.entity.Driver;
+import com.fleetops.exception.DriverNotFoundException;
 import com.fleetops.service.DriverService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,18 @@ class DriverControllerTest {
                 .andExpect(jsonPath("$.licenseNumber").value("LIC123"));
 
         verify(driverService).getById(1L);
+    }
+
+    @Test
+    @DisplayName("GET /api/drivers/{id} not found maps to 404 JSON body")
+    void getById_NotFound() throws Exception {
+        given(driverService.getById(404L)).willThrow(new DriverNotFoundException("Driver not found"));
+
+        mockMvc.perform(get("/api/drivers/404"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Driver not found")));
     }
 
     @Test

@@ -1,10 +1,9 @@
 package com.fleetops.service;
 
 import com.fleetops.entity.Vehicle;
-import com.fleetops.exception.LicensePlateAlreadyExistsException;
-import com.fleetops.exception.VehicleNotFoundException;
+import com.fleetops.exception.*;
 import com.fleetops.repository.VehicleRepository;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,38 +33,48 @@ public class VehicleService {
     public Vehicle create(Vehicle v) {
         Objects.requireNonNull(v, "Vehicle must not be null");
         try {
+            String normalizedPlate = normalizeLicensePlate(v.getLicensePlate());
+            if (normalizedPlate == null || normalizedPlate.isEmpty()) {
+                throw new IllegalArgumentException("License plate must not be null or empty");
+            }
+            if (repo.existsByLicensePlate(normalizedPlate)) {
+                throw new LicensePlateAlreadyExistsException(
+                        "Vehicle with license plate " + normalizedPlate + " already exists.");
+            }
+            v.setLicensePlate(normalizedPlate);
             return repo.save(v);
-        } catch (DataIntegrityViolationException dive) {
-            throw new LicensePlateAlreadyExistsException(
-                    "Vehicle with license plate " + v.getLicensePlate() + " already exists.");
-        } catch (Exception e) {
-            throw new RuntimeException("Error creating vehicle: " + e.getMessage());
+        } catch (LicensePlateAlreadyExistsException | VehicleNotFoundException | IllegalArgumentException e) {
+            throw e;
+        } catch (DataAccessException dataAccessException) {
+            throw new ServiceException("Error creating vehicle", dataAccessException);
         }
     }
 
     @Transactional
-    public Vehicle update(Long id, Vehicle v) {
+    public Vehicle update(Long id, Vehicle patch) {
         Objects.requireNonNull(id, "Vehicle id must not be null");
-        Objects.requireNonNull(v, "Vehicle must not be null");
+        Objects.requireNonNull(patch, "Vehicle must not be null");
         try {
-            Vehicle existing = getById(id);
-            if (v.getLicensePlate() != null) {
-                existing.setLicensePlate(v.getLicensePlate());
+            Vehicle existing = repo.findById(id).orElseThrow(() -> new VehicleNotFoundException("Vehicle not found"));
+            if (patch.getLicensePlate() != null) {
+                String normalizedPlate = normalizeLicensePlate(patch.getLicensePlate());
+                if (repo.existsByLicensePlateAndIdNot(normalizedPlate, id)) {
+                    throw new LicensePlateAlreadyExistsException(
+                            "Vehicle with license plate " + normalizedPlate + " already exists.");
+                }
+                existing.setLicensePlate(normalizedPlate);
             }
-            if (v.getMake() != null) {
-                existing.setMake(v.getMake());
+            if (patch.getMake() != null) {
+                existing.setMake(normalizeGeneralString(patch.getMake()));
             }
-            if (v.getModel() != null) {
-                existing.setModel(v.getModel());
+            if (patch.getModel() != null) {
+                existing.setModel(normalizeGeneralString(patch.getModel()));
             }
             return repo.save(existing);
-        } catch (DataIntegrityViolationException dive) {
-            throw new LicensePlateAlreadyExistsException(
-                    "Vehicle with license plate " + v.getLicensePlate() + " already exists.");
-        } catch (VehicleNotFoundException vnfe) {
-            throw vnfe;
-        } catch (Exception e) {
-            throw new RuntimeException("Error updating vehicle: " + e.getMessage());
+        } catch (LicensePlateAlreadyExistsException | VehicleNotFoundException | IllegalArgumentException e) {
+            throw e; // let intended exceptions proceed
+        } catch (DataAccessException dae) {
+            throw new ServiceException("Error updating vehicle", dae);
         }
     }
 
@@ -75,6 +84,20 @@ public class VehicleService {
         if (!repo.existsById(id)) {
             throw new VehicleNotFoundException("Vehicle not found for deletion");
         }
-        repo.deleteById(id);
+        try {
+            repo.deleteById(id);
+        } catch (VehicleNotFoundException e) {
+            throw e;
+        } catch (DataAccessException dae) {
+            throw new ServiceException("Error deleting vehicle", dae);
+        }
+    }
+
+    private String normalizeLicensePlate(String plate) {
+        return plate == null ? null : plate.trim().toUpperCase();
+    }
+
+    private String normalizeGeneralString(String dataValue) {
+        return dataValue == null ? null : dataValue.trim();
     }
 }

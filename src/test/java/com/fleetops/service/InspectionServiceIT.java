@@ -97,7 +97,8 @@ class InspectionServiceIT {
 
         @Test
         void create_WithNullInspection_ShouldThrowException() {
-            assertThrows(NullPointerException.class, () -> inspectionService.create(null));
+            Inspection inspection = null;
+            assertThrows(NullPointerException.class, () -> inspectionService.create(inspection));
         }
     }
 

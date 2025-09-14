@@ -1,23 +1,21 @@
 package com.fleetops.controller;
 
+import com.fleetops.dto.*;
 import com.fleetops.entity.Inspection;
 import com.fleetops.entity.Vehicle;
 import com.fleetops.service.InspectionService;
+import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.http.MediaType;
-import jakarta.validation.Valid;
-import com.fleetops.dto.InspectionRequest;
-import com.fleetops.dto.InspectionUpdateRequest;
-import com.fleetops.dto.InspectionResponse;
-import com.fleetops.dto.VehicleResponse;
 
 @RestController
 @RequestMapping(value = "/api/inspections", produces = MediaType.APPLICATION_JSON_VALUE)
+@Validated
 public class InspectionController {
 
     private final InspectionService service;
@@ -38,28 +36,27 @@ public class InspectionController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<InspectionResponse> create(@Valid @RequestBody InspectionRequest request) {
-        Inspection toSave = new Inspection();
-        toSave.setInspectionDate(request.getInspectionDate());
-        toSave.setStatus(request.getStatus());
-        Vehicle vehicleRef = new Vehicle();
-        vehicleRef.setId(request.getVehicleId());
-        toSave.setVehicle(vehicleRef);
-        Inspection saved = service.create(toSave);
+        Inspection saved = service.create(request);
         URI location = org.springframework.web.util.UriComponentsBuilder
                 .newInstance()
                 .path("/api/inspections/{id}")
                 .buildAndExpand(saved.getId())
                 .toUri();
         return ResponseEntity.created(location)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(toResponse(saved));
+                             .contentType(MediaType.APPLICATION_JSON)
+                             .body(toResponse(saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<InspectionResponse> update(@PathVariable Long id, @RequestBody InspectionUpdateRequest request) {
+    public ResponseEntity<InspectionResponse> update(@PathVariable Long id,
+                                                     @RequestBody InspectionUpdateRequest request) {
         Inspection patch = new Inspection();
-        if (request.getInspectionDate() != null) patch.setInspectionDate(request.getInspectionDate());
-        if (request.getStatus() != null) patch.setStatus(request.getStatus());
+        if (request.getInspectionDate() != null) {
+            patch.setInspectionDate(request.getInspectionDate());
+        }
+        if (request.getStatus() != null) {
+            patch.setStatus(request.getStatus());
+        }
         if (request.getVehicleId() != null) {
             Vehicle v = new Vehicle();
             v.setId(request.getVehicleId());
@@ -76,7 +73,9 @@ public class InspectionController {
     }
 
     private InspectionResponse toResponse(Inspection i) {
-        if (i == null) return null;
+        if (i == null) {
+            return null;
+        }
         VehicleResponse v = null;
         if (i.getVehicle() != null) {
             v = new VehicleResponse(

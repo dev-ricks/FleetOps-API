@@ -1,16 +1,16 @@
 package com.fleetops.controller;
 
+import com.fleetops.dto.DriverRequest;
+import com.fleetops.dto.DriverResponse;
 import com.fleetops.entity.Driver;
 import com.fleetops.service.DriverService;
+import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import org.springframework.http.MediaType;
-import jakarta.validation.Valid;
-import com.fleetops.dto.DriverRequest;
-import com.fleetops.dto.DriverResponse;
 
 @RestController
 @RequestMapping(value = "/api/drivers", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -24,7 +24,8 @@ public class DriverController {
 
     @GetMapping("/status")
     public ResponseEntity<String> getStatus() {
-        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body("<font color=\"Red\">Driver service is running.</font>");
+        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML)
+                             .body("<font color=\"Red\">Driver service is running.</font>");
     }
 
     @GetMapping("/{id}")
@@ -49,15 +50,19 @@ public class DriverController {
                 .buildAndExpand(saved.getId())
                 .toUri();
         return ResponseEntity.created(location)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(toResponse(saved));
+                             .contentType(MediaType.APPLICATION_JSON)
+                             .body(toResponse(saved));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<DriverResponse> update(@PathVariable Long id, @RequestBody DriverRequest request) {
         Driver patch = new Driver();
-        if (request.getName() != null) patch.setName(request.getName());
-        if (request.getLicenseNumber() != null) patch.setLicenseNumber(request.getLicenseNumber());
+        if (request.getName() != null) {
+            patch.setName(request.getName());
+        }
+        if (request.getLicenseNumber() != null) {
+            patch.setLicenseNumber(request.getLicenseNumber());
+        }
         Driver updated = service.update(id, patch);
         return ResponseEntity.ok(toResponse(updated));
     }
@@ -69,7 +74,9 @@ public class DriverController {
     }
 
     private DriverResponse toResponse(Driver d) {
-        if (d == null) return null;
+        if (d == null) {
+            return null;
+        }
         return new DriverResponse(d.getId(), d.getName(), d.getLicenseNumber());
     }
 }
