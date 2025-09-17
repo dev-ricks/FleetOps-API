@@ -3,6 +3,9 @@ package com.fleetops.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * JPA entity representing a driver in the fleet domain.
+ */
 @Entity
 @Data
 @NoArgsConstructor
@@ -11,8 +14,8 @@ import lombok.*;
 public class Driver {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // surrogate primary key
 
-    private String name;
-    private String licenseNumber;
+    private String name; // driver full name
+    private String licenseNumber; // external license identifier
 }

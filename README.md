@@ -141,6 +141,30 @@ See `docs/MIGRATIONS.md` for authoring and promotion guidelines.
 
 A source-of-truth `docs/openapi.yml` is included; keep it in sync with controllers. See `docs/API.md` for details.
 
+## Operational Endpoints (Actuator)
+
+Spring Boot Actuator is enabled to provide standardized health and info endpoints:
+
+- Health: http://localhost:8080/actuator/health
+- Liveness: http://localhost:8080/actuator/health/liveness
+- Readiness: http://localhost:8080/actuator/health/readiness
+- Info: http://localhost:8080/actuator/info
+
+Notes:
+- Only basic health/info are exposed by default; detailed health is shown when authorized.
+- See `application.yml` under `management.*` for exposure configuration.
+
+## Javadoc (Code-Level API Docs)
+
+Generate Javadoc locally (Windows PowerShell):
+
+```powershell
+mvn -q -DskipTests javadoc:javadoc
+Start-Process "D:\work\source\java\FleetOps-API\target\site\apidocs\index.html"
+```
+
+This produces browsable HTML docs under `target/site/apidocs/`.
+
 ## Security
 
 This service acts as an OAuth2 Resource Server and expects Bearer JWTs on protected endpoints.

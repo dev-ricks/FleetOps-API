@@ -3,6 +3,9 @@ package com.fleetops.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * JPA entity representing a vehicle in the fleet.
+ */
 @Entity
 @Data
 @NoArgsConstructor
@@ -11,9 +14,9 @@ import lombok.*;
 public class Vehicle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // surrogate primary key
 
-    private String licensePlate;
-    private String make;
-    private String model;
+    private String licensePlate; // normalized uppercase string
+    private String make;         // manufacturer
+    private String model;        // product model
 }

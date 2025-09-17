@@ -31,3 +31,23 @@ The repo also includes `docs/openapi.yml`. Keep it aligned with controller chang
 
 - Prefer URL or header-based versioning if/when needed (e.g., `/api/v1/...`).
 - Reflect version info in `docs/openapi.yml` and Swagger metadata.
+
+## Operational Endpoints (Actuator)
+
+Standard service health and info endpoints are exposed via Spring Boot Actuator:
+
+- Health: http://localhost:8080/actuator/health
+- Liveness: http://localhost:8080/actuator/health/liveness
+- Readiness: http://localhost:8080/actuator/health/readiness
+- Info: http://localhost:8080/actuator/info
+
+See `src/main/resources/application.yml` under `management.*` for exposure configuration and security.
+
+## Code-level Javadoc
+
+Generate and view Javadoc (Windows PowerShell):
+
+```powershell
+mvn -q -DskipTests javadoc:javadoc
+Start-Process "D:\work\source\java\FleetOps-API\target\site\apidocs\index.html"
+```

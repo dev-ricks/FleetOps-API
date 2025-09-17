@@ -7,10 +7,23 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Spring Security configuration.
+ * <p>
+ * Configures the application as an OAuth2 Resource Server that validates JWT bearer tokens.
+ * Permits unauthenticated access to basic Actuator endpoints for health/info and to public API/
+ * documentation routes as currently configured.
+ */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    /**
+     * Define the HTTP security filter chain for the application.
+     *
+     * @param http the {@link HttpSecurity} builder
+     * @return the configured {@link SecurityFilterChain}
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

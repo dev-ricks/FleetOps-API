@@ -4,6 +4,10 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+/**
+ * Response model representing an Inspection, optionally embedding a {@link VehicleResponse}
+ * summary of the associated vehicle.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

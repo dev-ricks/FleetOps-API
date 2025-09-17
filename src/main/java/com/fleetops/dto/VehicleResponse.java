@@ -2,6 +2,9 @@ package com.fleetops.dto;
 
 import lombok.*;
 
+/**
+ * Response model representing a Vehicle returned by the API.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
