@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    name: Build & Test (Java 17)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Show Java & Maven versions
+        run: |
+          java -version
+          mvn -version
+
+      - name: Build & Test
+        run: mvn -B -e -DskipITs=true verify
+
+      - name: Package (no tests)
+        if: success()
+        run: mvn -B -DskipTests package
+
+      - name: Upload JAR artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fleetops-api-jar
+          path: target/*.jar
+          if-no-files-found: warn
+
+  # Optional job to generate Javadoc (commented out by default)
+  # javadoc:
+  #   name: Generate Javadoc
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-java@v4
+  #       with:
+  #         distribution: temurin
+  #         java-version: '17'
+  #         cache: 'maven'
+  #     - name: Generate Javadoc
+  #       run: mvn -q -DskipTests javadoc:javadoc
+  #     - name: Upload Javadoc site
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: apidocs
+  #         path: target/site/apidocs/**
