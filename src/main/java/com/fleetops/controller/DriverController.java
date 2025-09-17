@@ -22,11 +22,6 @@ public class DriverController {
         this.service = service;
     }
 
-    @GetMapping("/status")
-    public ResponseEntity<String> getStatus() {
-        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML)
-                             .body("<font color=\"Red\">Driver service is running.</font>");
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<DriverResponse> getById(@PathVariable Long id) {

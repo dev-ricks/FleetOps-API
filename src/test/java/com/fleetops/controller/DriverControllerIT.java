@@ -38,19 +38,6 @@ class DriverControllerIT {
     }
 
     @Nested
-    @DisplayName("GET /api/drivers/status")
-    class Status {
-        @Test
-        @DisplayName("returns 200 text/html")
-        void returnsOkHtml() throws Exception {
-            mockMvc.perform(get("/api/drivers/status"))
-                   .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                   .andExpect(header().string("Content-Type", containsString(MediaType.TEXT_HTML_VALUE)))
-                   .andExpect(content().string(containsString("Driver service is running.")));
-        }
-    }
-
-    @Nested
     @DisplayName("POST /api/drivers")
     class Create {
         @Test
