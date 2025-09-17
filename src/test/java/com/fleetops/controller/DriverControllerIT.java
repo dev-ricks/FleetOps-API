@@ -5,7 +5,6 @@ import com.fleetops.dto.DriverRequest;
 import com.fleetops.entity.Driver;
 import com.fleetops.repository.DriverRepository;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.Nested;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,19 +34,6 @@ class DriverControllerIT {
     @AfterEach
     void cleanup() {
         driverRepository.deleteAll();
-    }
-
-    @Nested
-    @DisplayName("GET /api/drivers/status")
-    class Status {
-        @Test
-        @DisplayName("returns 200 text/html")
-        void returnsOkHtml() throws Exception {
-            mockMvc.perform(get("/api/drivers/status"))
-                   .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                   .andExpect(header().string("Content-Type", containsString(MediaType.TEXT_HTML_VALUE)))
-                   .andExpect(content().string(containsString("Driver service is running.")));
-        }
     }
 
     @Nested

@@ -15,6 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Application service responsible for inspection domain operations.
+ * <p>
+ * Provides CRUD behaviors, including overloads for creating inspections from
+ * API request models. Wraps data-access errors as {@link com.fleetops.exception.ServiceException}.
+ */
 @Service
 @Transactional(readOnly = true)
 public class InspectionService {
@@ -27,16 +33,30 @@ public class InspectionService {
         this.vehicleRepository = vehicleRepository;
     }
 
+    /**
+     * Retrieve all inspections.
+     */
     public List<Inspection> getAll() {
         return inspectionRepository.findAll();
     }
 
+    /**
+     * Find an inspection by id or throw {@link com.fleetops.exception.InspectionNotFoundException}.
+     *
+     * @param id inspection identifier (must not be null)
+     */
     public Inspection getById(Long id) {
         Objects.requireNonNull(id, "Inspection Id must not be null");
         return inspectionRepository.findById(id).orElseThrow(() -> new InspectionNotFoundException("Inspection not found"));
     }
 
     @Transactional
+    /**
+     * Create an inspection entity directly.
+     *
+     * @param inspection new inspection (id must be null)
+     * @return persisted inspection
+     */
     public Inspection create(Inspection inspection) {
         Objects.requireNonNull(inspection, "Inspection must not be null");
         if (inspection.getId() != null) {
@@ -46,6 +66,12 @@ public class InspectionService {
     }
 
     @Transactional
+    /**
+     * Create an inspection from a request payload, connecting it to the referenced vehicle.
+     *
+     * @param request API request model containing date, status, and vehicleId (must not be null)
+     * @return persisted inspection
+     */
     public Inspection create(InspectionRequest request) {
         Objects.requireNonNull(request, "InspectionRequest must not be null");
         try {
@@ -66,6 +92,13 @@ public class InspectionService {
     }
 
     @Transactional
+    /**
+     * Partially update an inspection by applying non-null fields.
+     *
+     * @param id         identifier of the inspection to update (must not be null)
+     * @param inspection partial inspection
+     * @return updated inspection
+     */
     public Inspection update(Long id, Inspection inspection) {
         Objects.requireNonNull(inspection, "Inspection must not be null");
         Objects.requireNonNull(id, "Id must not be null");
@@ -84,6 +117,11 @@ public class InspectionService {
     }
 
     @Transactional
+    /**
+     * Delete an inspection by id.
+     *
+     * @param id identifier to delete (must not be null)
+     */
     public void delete(Long id) {
         Objects.requireNonNull(id, "Inspection Id must not be null");
         Inspection existing = inspectionRepository.findById(id)
@@ -101,6 +139,10 @@ public class InspectionService {
      *
      * Intended for use in integration tests that assert the database state is unchanged
      * after this method throws.
+     */
+    /**
+     * Demonstrates an atomic multi-step flow meant for transactional testing.
+     * Always throws an exception at the end to trigger rollback.
      */
     public void compositeCreateUpdateDeleteThenFail(Inspection toCreate, Long idToUpdate, Long idToDelete) {
         java.util.Objects.requireNonNull(toCreate, "toCreate must not be null");
@@ -120,6 +162,9 @@ public class InspectionService {
         throw new RuntimeException("Intentional failure to validate transactional rollback");
     }
 
+    /**
+     * Normalize status by trimming and uppercasing.
+     */
     private String normalizeStatus(String status) {
         return status == null ? null : status.trim().toUpperCase();
     }

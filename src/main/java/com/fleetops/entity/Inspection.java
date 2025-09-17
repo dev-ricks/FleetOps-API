@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 
+/**
+ * JPA entity representing an inspection performed on a vehicle.
+ */
 @Entity
 @Data
 @NoArgsConstructor
@@ -12,11 +15,11 @@ import java.time.LocalDate;
 public class Inspection {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // surrogate primary key
 
-    private LocalDate inspectionDate;
-    private String status;
+    private LocalDate inspectionDate; // date the inspection occurred
+    private String status;            // normalized status value (e.g., PASSED/FAILED)
 
     @ManyToOne
-    private Vehicle vehicle;
+    private Vehicle vehicle;          // owning vehicle
 }

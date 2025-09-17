@@ -42,15 +42,6 @@ class DriverControllerTest {
     private DriverService driverService;
 
     @Test
-    @DisplayName("GET /api/drivers/status returns running message")
-    void status() throws Exception {
-        mockMvc.perform(get("/api/drivers/status"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                .andExpect(header().string("Content-Type", containsString("text")))
-                .andExpect(content().string(containsString("running")));
-    }
-
-    @Test
     @DisplayName("GET /api/drivers/{id} returns a driver")
     void getById() throws Exception {
         Driver d = Driver.builder().id(1L).name("John Doe").licenseNumber("LIC123").build();

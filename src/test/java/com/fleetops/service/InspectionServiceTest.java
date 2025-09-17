@@ -1,10 +1,8 @@
 package com.fleetops.service;
 
-import com.fleetops.dto.InspectionRequest;
 import com.fleetops.entity.Inspection;
 import com.fleetops.entity.Vehicle;
 import com.fleetops.exception.InspectionNotFoundException;
-import com.fleetops.exception.ServiceException;
 import com.fleetops.repository.InspectionRepository;
 import com.fleetops.repository.VehicleRepository;
 import org.junit.jupiter.api.*;
@@ -27,9 +25,6 @@ class InspectionServiceTest {
 
     @Mock
     private InspectionRepository inspectionRepository;
-
-    @Mock
-    private VehicleRepository vehicleRepository;
 
     @InjectMocks
     private InspectionService inspectionService;

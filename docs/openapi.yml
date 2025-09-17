@@ -7,20 +7,10 @@ servers:
   - url: http://localhost:8080
     description: Local development server
 
-paths:
-  /api/drivers/status:
-    get:
-      summary: Get driver service status
-      tags:
-        - Drivers
-      responses:
-        "200":
-          description: Service status string
-          content:
-            text/plain:
-              schema:
-                type: string
+security:
+  - bearerAuth: []
 
+paths:
   /api/drivers/{id}:
     get:
       summary: Get driver by ID
@@ -31,16 +21,21 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
+            format: int64
       responses:
         "200":
           description: Driver details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Driver"
+                $ref: "#/components/schemas/DriverResponse"
         "404":
           description: Driver not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     put:
       summary: Update driver by ID
       tags:
@@ -50,20 +45,33 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
+            format: int64
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Driver"
+              $ref: "#/components/schemas/DriverRequest"
       responses:
         "200":
           description: Updated driver
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Driver"
+                $ref: "#/components/schemas/DriverResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Driver not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     delete:
       summary: Delete driver by ID
       tags:
@@ -73,10 +81,17 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
+            format: int64
       responses:
         "204":
           description: Driver deleted
+        "404":
+          description: Driver not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/drivers:
     post:
@@ -87,16 +102,21 @@ paths:
         required: true
         content:
           application/json:
-
             schema:
-              $ref: "#/components/schemas/Driver"
+              $ref: "#/components/schemas/DriverRequest"
       responses:
         "201":
           description: Created driver
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Driver"
+                $ref: "#/components/schemas/DriverResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/drivers/list:
     get:
       summary: List all drivers
@@ -110,7 +130,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Driver"
+                  $ref: "#/components/schemas/DriverResponse"
 
   /api/inspections/{id}:
     get:
@@ -122,14 +142,21 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
+            format: int64
       responses:
         "200":
           description: Inspection details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Inspection"
+                $ref: "#/components/schemas/InspectionResponse"
+        "404":
+          description: Inspection not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     put:
       summary: Update inspection by ID
       tags:
@@ -139,20 +166,33 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
+            format: int64
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Inspection"
+              $ref: "#/components/schemas/InspectionUpdateRequest"
       responses:
         "200":
           description: Updated inspection
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Inspection"
+                $ref: "#/components/schemas/InspectionResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Inspection not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     delete:
       summary: Delete inspection by ID
       tags:
@@ -162,10 +202,17 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
+            format: int64
       responses:
         "204":
           description: Inspection deleted
+        "404":
+          description: Inspection not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/inspections/list:
     get:
@@ -180,7 +227,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Inspection"
+                  $ref: "#/components/schemas/InspectionResponse"
 
   /api/vehicles/{id}:
     get:
@@ -192,14 +239,21 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
+            format: int64
       responses:
         "200":
           description: Vehicle details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Vehicle"
+                $ref: "#/components/schemas/VehicleResponse"
+        "404":
+          description: Vehicle not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     put:
       summary: Update vehicle by ID
       tags:
@@ -209,20 +263,33 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
+            format: int64
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Vehicle"
+              $ref: "#/components/schemas/VehicleRequest"
       responses:
         "200":
           description: Updated vehicle
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Vehicle"
+                $ref: "#/components/schemas/VehicleResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Vehicle not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     delete:
       summary: Delete vehicle by ID
       tags:
@@ -232,10 +299,53 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
+            format: int64
       responses:
         "204":
           description: Vehicle deleted
+        "404":
+          description: Vehicle not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/vehicles:
+    post:
+      summary: Create a new vehicle
+      tags:
+        - Vehicles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleRequest"
+      responses:
+        "201":
+          description: Created vehicle
+          headers:
+            Location:
+              description: URI of the created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict (e.g., duplicate license plate)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 
   /api/vehicles/list:
     get:
@@ -250,39 +360,114 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Vehicle"
+                  $ref: "#/components/schemas/VehicleResponse"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
-    Driver:
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        error:
+          type: string
+        message:
+          type: string
+
+    DriverRequest:
+      type: object
+      required: [name, licenseNumber]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        licenseNumber:
+          type: string
+          maxLength: 50
+
+    DriverResponse:
       type: object
       properties:
         id:
-          type: string
+          type: integer
+          format: int64
           readOnly: true
         name:
           type: string
         licenseNumber:
           type: string
-    Inspection:
+
+    VehicleRequest:
+      type: object
+      required: [licensePlate, make, model]
+      properties:
+        licensePlate:
+          type: string
+          maxLength: 20
+        make:
+          type: string
+          maxLength: 50
+        model:
+          type: string
+          maxLength: 50
+
+    VehicleResponse:
       type: object
       properties:
         id:
-          type: string
-          readOnly: true
-        date:
-          type: string
-          format: date
-        vehicleId:
           type: integer
-    Vehicle:
-      type: object
-      properties:
-        id:
+          format: int64
+          readOnly: true
+        licensePlate:
           type: string
         make:
           type: string
         model:
           type: string
-        year:
+
+    InspectionRequest:
+      type: object
+      required: [inspectionDate, status, vehicleId]
+      properties:
+        inspectionDate:
+          type: string
+          format: date
+        status:
+          type: string
+        vehicleId:
           type: integer
+          format: int64
+
+    InspectionUpdateRequest:
+      type: object
+      properties:
+        inspectionDate:
+          type: string
+          format: date
+        status:
+          type: string
+        vehicleId:
+          type: integer
+          format: int64
+
+    InspectionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        inspectionDate:
+          type: string
+          format: date
+        status:
+          type: string
+        vehicle:
+          $ref: "#/components/schemas/VehicleResponse"

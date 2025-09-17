@@ -1,13 +1,24 @@
 package com.fleetops.controller;
 
+/**
+ * Centralized controller advice that translates exceptions into standardized HTTP responses.
+ * <p>
+ * Typical mappings include:
+ * <ul>
+ *   <li>Constraint/validation violations -> 400 Bad Request</li>
+ *   <li>Not found exceptions -> 404 Not Found</li>
+ *   <li>Conflicts such as duplicate resources -> 409 Conflict</li>
+ *   <li>Unhandled errors -> 500 Internal Server Error</li>
+ * </ul>
+ * The corresponding response bodies follow a simple error format (see ErrorResponse in OpenAPI).
+ */
+
 import com.fleetops.exception.LicensePlateAlreadyExistsException;
 import com.fleetops.exception.NotFoundExceptionBase;
 import jakarta.validation.ConstraintViolationException;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

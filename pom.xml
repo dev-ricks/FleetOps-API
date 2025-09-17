@@ -13,6 +13,9 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Defaults for test skipping flags; can be overridden via -DskipUTs / -DskipITs -->
+        <skipUTs>false</skipUTs>
+        <skipITs>false</skipITs>
     </properties>
 
     <parent>
@@ -27,6 +30,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -110,6 +117,61 @@
                         </path>
                     </annotationProcessorPaths>
                     <useModulePath>false</useModulePath>
+                </configuration>
+            </plugin>
+
+            <!-- Unit tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- Run only *Test and exclude *IT* from unit phase -->
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/*IT.java</exclude>
+                        <exclude>**/*ITCase.java</exclude>
+                    </excludes>
+                    <!-- Allow skipping unit tests via -DskipUTs=true -->
+                    <skipTests>${skipUTs}</skipTests>
+                    <!-- When we intentionally run 0 tests (e.g., -Dtest=!**), do not fail the build here -->
+                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+                </configuration>
+            </plugin>
+
+            <!-- Integration tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.2.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- Only run ITs here -->
+                    <includes>
+                        <include>**/*IT.java</include>
+                        <include>**/*ITCase.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/*Test.java</exclude>
+                    </excludes>
+                    <!-- Allow skipping integration tests via -DskipITs=true -->
+                    <skipITs>${skipITs}</skipITs>
                 </configuration>
             </plugin>
         </plugins>

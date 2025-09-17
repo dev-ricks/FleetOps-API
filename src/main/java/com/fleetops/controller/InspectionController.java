@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
+/**
+ * REST controller for managing inspection resources.
+ * <p>
+ * Exposes CRUD endpoints under {@code /api/inspections}. Requests are validated and
+ * responses are JSON. Errors/violations are handled centrally by the global exception handler.
+ */
 @RestController
 @RequestMapping(value = "/api/inspections", produces = MediaType.APPLICATION_JSON_VALUE)
 @Validated
@@ -20,20 +26,42 @@ public class InspectionController {
 
     private final InspectionService service;
 
+    /**
+     * Constructs an instance with the required service dependency.
+     *
+     * @param service inspection service instance
+     */
     public InspectionController(InspectionService service) {
         this.service = service;
     }
 
+    /**
+     * Retrieve an inspection by id.
+     *
+     * @param id inspection identifier
+     * @return HTTP 200 with {@link InspectionResponse} or mapped to HTTP 404 if not found
+     */
     @GetMapping("/{id}")
     public ResponseEntity<InspectionResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(toResponse(service.getById(id)));
     }
 
+    /**
+     * List all inspections.
+     *
+     * @return a JSON array of {@link InspectionResponse}
+     */
     @GetMapping("/list")
     public List<InspectionResponse> list() {
         return service.getAll().stream().map(this::toResponse).toList();
     }
 
+    /**
+     * Create an inspection.
+     *
+     * @param request validated inspection creation payload
+     * @return HTTP 201 with Location header and created {@link InspectionResponse}
+     */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<InspectionResponse> create(@Valid @RequestBody InspectionRequest request) {
         Inspection saved = service.create(request);
@@ -47,6 +75,13 @@ public class InspectionController {
                              .body(toResponse(saved));
     }
 
+    /**
+     * Update an inspection with non-null fields from the request payload.
+     *
+     * @param id      inspection identifier
+     * @param request partial update payload
+     * @return HTTP 200 with updated {@link InspectionResponse}
+     */
     @PutMapping("/{id}")
     public ResponseEntity<InspectionResponse> update(@PathVariable Long id,
                                                      @RequestBody InspectionUpdateRequest request) {
@@ -66,12 +101,24 @@ public class InspectionController {
         return ResponseEntity.ok(toResponse(updated));
     }
 
+    /**
+     * Delete an inspection by id.
+     *
+     * @param id inspection identifier
+     * @return HTTP 204 on success
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Map a domain {@link Inspection} to {@link InspectionResponse} including nested vehicle summary.
+     *
+     * @param i domain inspection entity
+     * @return API response model, or null if input is null
+     */
     private InspectionResponse toResponse(Inspection i) {
         if (i == null) {
             return null;
