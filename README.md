@@ -1,10 +1,11 @@
-
-
 # FleetOps API 🚀
 [![Java](https://img.shields.io/badge/Java-17-blue)](https://openjdk.org/projects/jdk/17/)  
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.5-brightgreen)](https://spring.io/projects/spring-boot)  
 [![Build](https://img.shields.io/github/actions/workflow/status/dev-ricks/FleetOps-Api/ci.yml?branch=main&label=CI&logo=github)](https://github.com/dev-ricks/FleetOps-Api/actions/workflows/ci.yml)  
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-blue?logo=linkedin)](https://www.linkedin.com/in/richard-smit-1a811b87/)
+
+**Richard Smit: Senior Backend Engineer (Java 17, Spring Boot) • Secure APIs • OAuth2/JWT • Scalable Systems • Cloud-Native Solutions • Postgres • CI/CD • System Design**
 
 **FleetOps API** is a **production-grade fleet management system** built with **Spring Boot 3, Java 17, OAuth2/JWT, PostgreSQL, Liquibase, Kafka, and Redis**.  
 It demonstrates my ability to design, secure, test, and deploy modern APIs that scale in real-world enterprise environments.
@@ -43,6 +44,14 @@ flowchart LR
 - Operational Visibility → Actuator endpoints for health, readiness, and metrics.
 - Cloud-Ready → Dockerized with Compose for local infra; deployable to AWS ECS/EKS.
 - Testing Excellence → Unit, slice, integration, and security tests with JUnit 5, Mockito, and H2.
+
+---
+
+## Service Scope
+
+- This repository contains a single Spring Boot service (not a multi-service deployment).
+- It follows microservice-friendly practices: stateless API, externalized configuration, containerized runtime, CI/CD, OpenAPI, and Actuator.
+- To evolve into a microservices architecture, split bounded contexts (Vehicles/Drivers/Inspections) into independently deployable services, adopt database-per-service and service discovery/API gateway, use async messaging where appropriate (e.g., Kafka), and add distributed observability.
 
 ---
 
