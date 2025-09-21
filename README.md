@@ -47,9 +47,18 @@ flowchart LR
 
 ---
 
+## 🔐 Security
+
+- See the [Security Documentation Index](docs/INDEX.md) for a full overview of security requirements, controls, and plans.
+- Read the [Security Policy](docs/security/SECURITY_POLICY.md) for principles and responsibilities.
+- Review the [Security Architecture Diagram](docs/security/diagrams/security-architecture.md) and [visual PNG](docs/security/assets/security-architecture.png).
+- All security documentation is in the [docs/security/](docs/security/) folder, with diagrams in [docs/security/diagrams/](docs/security/diagrams/) and images in [docs/security/assets/](docs/security/assets/).
+
+---
+
 ## Service Scope
 
-- This repository contains a single Spring Boot service (not a multi-service deployment).
+- This repository contains a single Spring Boot service (not a multiservice deployment).
 - It follows microservice-friendly practices: stateless API, externalized configuration, containerized runtime, CI/CD, OpenAPI, and Actuator.
 - To evolve into a microservices architecture, split bounded contexts (Vehicles/Drivers/Inspections) into independently deployable services, adopt database-per-service and service discovery/API gateway, use async messaging where appropriate (e.g., Kafka), and add distributed observability.
 
@@ -213,4 +222,3 @@ Licensed under the MIT License.
 ## 🤝 Contributing
 
 See `CONTRIBUTING.md` for branch strategy, commit messages, code style, testing, and PR process.
-

@@ -1,0 +1,33 @@
+@startuml
+' FleetOps API Security Architecture Diagram
+skinparam backgroundColor #FFFFFF
+skinparam node {
+  BackgroundColor #E3F2FD
+  BorderColor #1976D2
+}
+
+actor ClientApp as "Client App"
+node APIGateway as "API Gateway" {
+  [Rate Limiting]
+  [JWT Validation]
+}
+node FleetOpsAPI as "FleetOps API" {
+  [Business Logic]
+  [RBAC]
+}
+database DB as "Database (Encrypted at Rest)"
+
+ClientApp --> APIGateway : HTTPS (TLS 1.2+)
+APIGateway --> FleetOpsAPI : JWT, HTTPS
+FleetOpsAPI --> DB : JDBC (Encrypted)
+
+APIGateway -left-> [Rate Limiting]
+APIGateway -down-> [JWT Validation]
+FleetOpsAPI -down-> [Business Logic]
+FleetOpsAPI -right-> [RBAC]
+
+@enduml
+
+' To generate a PNG:
+' 1. Save this file as security-architecture.puml
+' 2. Use https://www.plantuml.com/plantuml or an IDE plugin to export as PNG
