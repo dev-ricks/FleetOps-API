@@ -1,0 +1,31 @@
+@startuml
+' FleetOps API Security Data Flow Diagram
+skinparam backgroundColor #FFFFFF
+skinparam node {
+  BackgroundColor #E3F2FD
+  BorderColor #1976D2
+}
+
+actor Client as "Client (Web/Mobile App)"
+node Gateway as "API Gateway" {
+  [HTTPS (TLS 1.2+)]
+  [JWT Validation]
+  [Rate Limiting]
+}
+node API as "FleetOps API" {
+  [RBAC]
+  [Business Logic]
+  [Audit Logging]
+}
+database DB as "Database (Encrypted at Rest)"
+
+Client --> Gateway : Authenticated Request (JWT)
+Gateway --> API : Validated Request
+API --> DB : Encrypted Data
+API --> [Audit Logging] : Security Events
+
+@enduml
+
+' To generate a PNG:
+' 1. Save this file as security-data-flow.puml
+' 2. Use https://www.plantuml.com/plantuml or an IDE plugin to export as PNG

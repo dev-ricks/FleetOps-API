@@ -41,6 +41,12 @@ See entities under `src/main/java/com/fleetops/entity/`.
   - Method/endpoint authorization via Spring Security config and annotations.
 - Tests use `spring-security-test` for mock authentication.
 
+### Security Architecture
+
+- See the [Security Architecture Diagram](security/diagrams/security-architecture.md) for a detailed description of security layers and controls.
+- View the [visual diagram (PNG)](security/assets/security-architecture.png) or [PlantUML source](security/assets/security-architecture.puml).
+- For all security requirements, policies, and plans, see the [Security Documentation Index](../INDEX.md).
+
 ## Observability
 
 - Logging via Spring Boot logging (Logback).
