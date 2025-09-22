@@ -1,7 +1,6 @@
 package com.fleetops.controller;
 
-import com.fleetops.dto.DriverRequest;
-import com.fleetops.dto.DriverResponse;
+import com.fleetops.dto.*;
 import com.fleetops.entity.Driver;
 import com.fleetops.service.DriverService;
 import jakarta.validation.Valid;
@@ -80,7 +79,7 @@ public class DriverController {
      * @return HTTP 200 with updated {@link DriverResponse}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<DriverResponse> update(@PathVariable Long id, @RequestBody DriverRequest request) {
+    public ResponseEntity<DriverResponse> update(@PathVariable Long id, @Valid @RequestBody DriverUpdateRequest request) {
         Driver patch = new Driver();
         if (request.getName() != null) {
             patch.setName(request.getName());

@@ -1,7 +1,6 @@
 package com.fleetops.controller;
 
-import com.fleetops.dto.VehicleRequest;
-import com.fleetops.dto.VehicleResponse;
+import com.fleetops.dto.*;
 import com.fleetops.entity.Vehicle;
 import com.fleetops.service.VehicleService;
 import jakarta.validation.Valid;
@@ -84,7 +83,8 @@ public class VehicleController {
      * @return HTTP 200 with updated {@link VehicleResponse}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<VehicleResponse> update(@PathVariable Long id, @RequestBody VehicleRequest request) {
+    public ResponseEntity<VehicleResponse> update(@PathVariable Long id,
+                                                  @Valid @RequestBody VehicleUpdateRequest request) {
         Vehicle patch = new Vehicle();
         // Allow partial update: only set fields that are not null in request
         if (request.getLicensePlate() != null) {

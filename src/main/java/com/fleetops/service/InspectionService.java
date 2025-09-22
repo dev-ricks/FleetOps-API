@@ -168,5 +168,4 @@ public class InspectionService {
     private String normalizeStatus(String status) {
         return status == null ? null : status.trim().toUpperCase();
     }
-
 }

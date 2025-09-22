@@ -84,7 +84,7 @@ public class InspectionController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<InspectionResponse> update(@PathVariable Long id,
-                                                     @RequestBody InspectionUpdateRequest request) {
+                                                     @Valid @RequestBody InspectionUpdateRequest request) {
         Inspection patch = new Inspection();
         if (request.getInspectionDate() != null) {
             patch.setInspectionDate(request.getInspectionDate());
