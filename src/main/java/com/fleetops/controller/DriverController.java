@@ -6,6 +6,7 @@ import com.fleetops.service.DriverService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -20,6 +21,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping(value = "/api/drivers", produces = MediaType.APPLICATION_JSON_VALUE)
+@PreAuthorize("hasAnyRole('ADMIN','USER')")
 public class DriverController {
 
     private final DriverService service;

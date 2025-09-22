@@ -31,9 +31,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // TODO: remove /actuator/** and /api/** pass throughs to skip security for development
                         // Allow unauthenticated access to basic actuator health (no details due to app config)
-                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info", "/actuator/**").permitAll()
-                        .requestMatchers("/api/public/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/**").permitAll()
-                        .anyRequest().authenticated())
+                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info", "/actuator/**").hasRole("ADMIN")
+                        .requestMatchers("/api/inspections/**", "/api/vehicles/**", "/api/drivers/**").hasAnyRole("ADMIN","USER")
+                        .requestMatchers("/api/public/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(
                         Customizer.withDefaults()));
         return http.build();

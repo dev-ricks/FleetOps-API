@@ -6,6 +6,7 @@ import com.fleetops.entity.Vehicle;
 import com.fleetops.exception.LicensePlateAlreadyExistsException;
 import com.fleetops.exception.VehicleNotFoundException;
 import com.fleetops.service.VehicleService;
+import com.fleetops.test.TestAuth;
 import org.junit.jupiter.api.*;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -24,12 +25,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = VehicleController.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import({GlobalControllerExceptionHandler.class, ControllerTestConfig.class})
+@AutoConfigureMockMvc(addFilters = true)
+@Import({GlobalControllerExceptionHandler.class, ControllerTestConfig.class, com.fleetops.config.SecurityConfig.class})
 class VehicleControllerTest {
 
     @Autowired
@@ -55,7 +57,7 @@ class VehicleControllerTest {
             Vehicle v = Vehicle.builder().id(1L).licensePlate("ABC123").make("Toyota").model("Corolla").build();
             given(vehicleService.getById(1L)).willReturn(v);
 
-            mockMvc.perform(get("/api/vehicles/1"))
+            mockMvc.perform(get("/api/vehicles/1").with(TestAuth.auth()))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
                     .andExpect(jsonPath("$.id").value(1))
@@ -71,7 +73,7 @@ class VehicleControllerTest {
         void getById_NotFound() throws Exception {
             given(vehicleService.getById(99L)).willThrow(new VehicleNotFoundException("Vehicle not found"));
 
-            mockMvc.perform(get("/api/vehicles/99"))
+            mockMvc.perform(get("/api/vehicles/99").with(TestAuth.auth()))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404))
                     .andExpect(jsonPath("$.error").value("Not Found"))
@@ -87,7 +89,7 @@ class VehicleControllerTest {
             );
             given(vehicleService.getAll()).willReturn(vehicles);
 
-            mockMvc.perform(get("/api/vehicles/list"))
+            mockMvc.perform(get("/api/vehicles/list").with(TestAuth.auth()))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
                     .andExpect(jsonPath("$", hasSize(2)))
@@ -105,6 +107,8 @@ class VehicleControllerTest {
             given(vehicleService.create(any(Vehicle.class))).willReturn(saved);
 
             mockMvc.perform(post("/api/vehicles")
+                            .with(TestAuth.auth())
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(payload)))
                     .andExpect(status().isCreated())
@@ -126,6 +130,7 @@ class VehicleControllerTest {
                     .willThrow(new LicensePlateAlreadyExistsException("Vehicle with license plate DUPL already exists."));
 
             mockMvc.perform(post("/api/vehicles")
+                            .with(TestAuth.auth())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(payload)))
                     .andExpect(status().isConflict())
@@ -142,6 +147,8 @@ class VehicleControllerTest {
             given(vehicleService.update(eq(5L), any(Vehicle.class))).willReturn(updated);
 
             mockMvc.perform(put("/api/vehicles/5")
+                            .with(TestAuth.auth())
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(patch)))
                     .andExpect(status().isOk())
@@ -160,6 +167,7 @@ class VehicleControllerTest {
             Vehicle patch = Vehicle.builder().make("Updated").build();
             given(vehicleService.update(eq(404L), any(Vehicle.class))).willThrow(new VehicleNotFoundException("Vehicle not found"));
             mockMvc.perform(put("/api/vehicles/404")
+                            .with(TestAuth.auth())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(patch)))
                     .andExpect(status().isNotFound())
@@ -173,6 +181,7 @@ class VehicleControllerTest {
         void update_InvalidPayload() throws Exception {
             String invalidJson = "{}";
             mockMvc.perform(put("/api/vehicles/5")
+                            .with(TestAuth.auth())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(invalidJson))
                     .andExpect(status().isBadRequest());
@@ -183,7 +192,7 @@ class VehicleControllerTest {
         void deleteVehicle() throws Exception {
             doNothing().when(vehicleService).delete(7L);
 
-            mockMvc.perform(delete("/api/vehicles/7")).andExpect(status().isNoContent()).andExpect(content().string(""));
+            mockMvc.perform(delete("/api/vehicles/7").with(TestAuth.auth()).with(csrf())).andExpect(status().isNoContent()).andExpect(content().string(""));
 
             verify(vehicleService).delete(7L);
         }
@@ -192,7 +201,7 @@ class VehicleControllerTest {
         @DisplayName("DELETE /api/vehicles/{id} returns 404 when vehicle not found")
         void deleteVehicle_NotFound() throws Exception {
             org.mockito.Mockito.doThrow(new VehicleNotFoundException("Vehicle not found")).when(vehicleService).delete(404L);
-            mockMvc.perform(delete("/api/vehicles/404"))
+            mockMvc.perform(delete("/api/vehicles/404").with(TestAuth.auth()).with(csrf()))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404))
                     .andExpect(jsonPath("$.error").value("Not Found"))
@@ -206,18 +215,24 @@ class VehicleControllerTest {
         @Test
         @DisplayName("getVehicle_shouldReturn401_whenNoJwtProvided")
         void getVehicle_shouldReturn401_whenNoJwtProvided() throws Exception {
-            // Arrange: No JWT token
-            // Act: Perform GET request to /api/vehicles/1
             mockMvc.perform(get("/api/vehicles/1"))
-                // Assert: Should return 401 Unauthorized
                 .andExpect(status().isUnauthorized());
         }
         @Test
         @DisplayName("getVehicle_shouldReturn403_whenJwtLacksRole")
-        @org.springframework.security.test.context.support.WithMockUser(roles = "USER") // Assuming ADMIN is required
         void getVehicle_shouldReturn403_whenJwtLacksRole() throws Exception {
-            mockMvc.perform(get("/api/vehicles/1"))
+            mockMvc.perform(get("/api/vehicles/1")
+                .with(TestAuth.auth("ROLE_RESTRICTED")))
                 .andExpect(status().isForbidden());
+            // ensure service wasn't called when access denied
+            Mockito.verify(vehicleService, Mockito.never()).getById(1L);
+        }
+        @Test
+        @DisplayName("getVehicle_shouldReturn200_whenJwtHasUserRole")
+        void getVehicle_shouldReturn200_whenJwtHasUserRole() throws Exception {
+            mockMvc.perform(get("/api/vehicles/1")
+                .with(TestAuth.auth()))
+                .andExpect(status().isOk());
         }
     }
 
@@ -231,6 +246,8 @@ class VehicleControllerTest {
             String invalidJson = "{}";
             // Act: Perform POST request
             mockMvc.perform(post("/api/vehicles")
+                    .with(TestAuth.auth())
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(invalidJson))
                 // Assert: Should return 400 Bad Request
@@ -247,7 +264,7 @@ class VehicleControllerTest {
             // Arrange: Mock service to throw not found
             given(vehicleService.getById(999L)).willThrow(new com.fleetops.exception.VehicleNotFoundException("Not found"));
             // Act: Perform GET request
-            mockMvc.perform(get("/api/vehicles/999"))
+            mockMvc.perform(get("/api/vehicles/999").with(TestAuth.auth()))
                 // Assert: Should return 404 Not Found
                 .andExpect(status().isNotFound());
         }

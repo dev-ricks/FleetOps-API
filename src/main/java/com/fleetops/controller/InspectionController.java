@@ -7,7 +7,7 @@ import com.fleetops.service.InspectionService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -21,7 +21,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping(value = "/api/inspections", produces = MediaType.APPLICATION_JSON_VALUE)
-@Validated
+@PreAuthorize("hasAnyRole('ADMIN','USER')")
 public class InspectionController {
 
     private final InspectionService service;
@@ -42,6 +42,7 @@ public class InspectionController {
      * @return HTTP 200 with {@link InspectionResponse} or mapped to HTTP 404 if not found
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ResponseEntity<InspectionResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(toResponse(service.getById(id)));
     }
@@ -52,6 +53,7 @@ public class InspectionController {
      * @return a JSON array of {@link InspectionResponse}
      */
     @GetMapping("/list")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public List<InspectionResponse> list() {
         return service.getAll().stream().map(this::toResponse).toList();
     }
@@ -63,6 +65,7 @@ public class InspectionController {
      * @return HTTP 201 with Location header and created {@link InspectionResponse}
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ResponseEntity<InspectionResponse> create(@Valid @RequestBody InspectionRequest request) {
         Inspection saved = service.create(request);
         URI location = org.springframework.web.util.UriComponentsBuilder
@@ -83,6 +86,7 @@ public class InspectionController {
      * @return HTTP 200 with updated {@link InspectionResponse}
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ResponseEntity<InspectionResponse> update(@PathVariable Long id,
                                                      @Valid @RequestBody InspectionUpdateRequest request) {
         Inspection patch = new Inspection();
@@ -108,6 +112,7 @@ public class InspectionController {
      * @return HTTP 204 on success
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

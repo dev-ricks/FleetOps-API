@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -46,16 +47,17 @@ class DriverControllerIT {
             req.setName("Jane Doe");
             req.setLicenseNumber("LIC-XYZ");
 
-            String response = mockMvc.perform(post("/api/drivers").contentType(MediaType.APPLICATION_JSON)
-                                                                  .content(objectMapper.writeValueAsString(req))).andExpect(
-                                             org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isCreated())
-                                     .andExpect(header().string("Location", matchesPattern(".*/api/drivers/\\d+")))
-                                     .andExpect(header().string("Content-Type",
-                                                                containsString(MediaType.APPLICATION_JSON_VALUE)))
-                                     .andExpect(jsonPath("$.id", notNullValue()))
-                                     .andExpect(jsonPath("$.name").value("Jane Doe"))
-                                     .andExpect(jsonPath("$.licenseNumber").value("LIC-XYZ")).andReturn().getResponse()
-                                     .getContentAsString();
+            String response = mockMvc.perform(post("/api/drivers")
+                            .with(jwt().authorities(() -> "ROLE_USER"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(req)))
+                    .andExpect(status().isCreated())
+                    .andExpect(header().string("Location", matchesPattern(".*/api/drivers/\\d+")))
+                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
+                    .andExpect(jsonPath("$.id", notNullValue()))
+                    .andExpect(jsonPath("$.name").value("Jane Doe"))
+                    .andExpect(jsonPath("$.licenseNumber").value("LIC-XYZ"))
+                    .andReturn().getResponse().getContentAsString();
 
             com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(response);
             Long id = node.get("id").asLong();
@@ -73,7 +75,8 @@ class DriverControllerIT {
         void returnsDto() throws Exception {
             Driver d = driverRepository.save(Driver.builder().name("A").licenseNumber("L1").build());
 
-            mockMvc.perform(get("/api/drivers/" + d.getId()))
+            mockMvc.perform(get("/api/drivers/" + d.getId())
+                    .with(jwt().authorities(() -> "ROLE_USER")))
                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
                    .andExpect(jsonPath("$.id").value(d.getId()))
@@ -91,16 +94,20 @@ class DriverControllerIT {
             driverRepository.save(Driver.builder().name("A").licenseNumber("L1").build());
             driverRepository.save(Driver.builder().name("B").licenseNumber("L2").build());
 
-            mockMvc.perform(get("/api/drivers/list"))
-                   .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                   .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
-                   .andExpect(jsonPath("$", hasSize(2)));
+            mockMvc.perform(get("/api/drivers/list")
+                    .with(jwt().authorities(() -> "ROLE_USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
+                    .andExpect(jsonPath("$", hasSize(2)))
+                    .andExpect(jsonPath("$[0].name").value("A"))
+                    .andExpect(jsonPath("$[1].name").value("B"));
         }
     }
 
     @Nested
     @DisplayName("PUT /api/drivers/{id}")
     class Update {
+
         @Test
         @DisplayName("updates existing driver and returns DTO")
         void updatesDriver() throws Exception {
@@ -108,7 +115,9 @@ class DriverControllerIT {
             DriverRequest patch = new DriverRequest();
             patch.setName("New");
 
-            mockMvc.perform(put("/api/drivers/" + existing.getId()).contentType(MediaType.APPLICATION_JSON)
+            mockMvc.perform(put("/api/drivers/" + existing.getId())
+                            .with(jwt().authorities(() -> "ROLE_USER"))
+                            .contentType(MediaType.APPLICATION_JSON)
                                                                    .content(objectMapper.writeValueAsString(patch)))
                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
                    .andExpect(jsonPath("$.id").value(existing.getId()))
@@ -122,12 +131,14 @@ class DriverControllerIT {
     @Nested
     @DisplayName("DELETE /api/drivers/{id}")
     class Delete {
+
         @Test
         @DisplayName("returns 204 and removes entity")
         void deletesDriver() throws Exception {
             Driver existing = driverRepository.save(Driver.builder().name("X").licenseNumber("Y").build());
 
-            mockMvc.perform(delete("/api/drivers/" + existing.getId()))
+            mockMvc.perform(delete("/api/drivers/" + existing.getId())
+                            .with(jwt().authorities(() -> "ROLE_USER")))
                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNoContent())
                    .andExpect(content().string(""));
 
@@ -138,10 +149,12 @@ class DriverControllerIT {
     @Nested
     @DisplayName("Errors")
     class Errors {
+
         @Test
         @DisplayName("GET /api/drivers/{id} not found -> 404 JSON error body")
         void getById_NotFound() throws Exception {
-            mockMvc.perform(get("/api/drivers/999999"))
+            mockMvc.perform(get("/api/drivers/999999")
+                           .with(jwt().authorities(() -> "ROLE_USER")))
                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound())
                    .andExpect(jsonPath("$.status").value(404))
                    .andExpect(jsonPath("$.error").value("Not Found"));
@@ -153,7 +166,7 @@ class DriverControllerIT {
             DriverRequest req = new DriverRequest();
             // missing required fields
 
-            mockMvc.perform(post("/api/drivers").contentType(MediaType.APPLICATION_JSON)
+            mockMvc.perform(post("/api/drivers").with(jwt().authorities(() -> "ROLE_USER")).contentType(MediaType.APPLICATION_JSON)
                                                    .content(objectMapper.writeValueAsString(req)))
                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest())
                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))

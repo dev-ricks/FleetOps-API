@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fleetops.dto.VehicleRequest;
 import com.fleetops.entity.Vehicle;
 import com.fleetops.repository.VehicleRepository;
+import com.fleetops.test.TestAuth;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -48,6 +49,7 @@ class VehicleControllerIT {
             req.setModel("3");
 
             String response = mockMvc.perform(post("/api/vehicles")
+                            .with(TestAuth.auth())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isCreated())
@@ -73,7 +75,8 @@ class VehicleControllerIT {
         void returnsDto() throws Exception {
             Vehicle v = vehicleRepository.save(Vehicle.builder().licensePlate("ABC").make("Toyota").model("Corolla").build());
 
-            mockMvc.perform(get("/api/vehicles/" + v.getId()))
+            mockMvc.perform(get("/api/vehicles/" + v.getId())
+                    .with(TestAuth.auth()))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
                     .andExpect(jsonPath("$.id").value(v.getId()))
@@ -92,16 +95,20 @@ class VehicleControllerIT {
             vehicleRepository.save(Vehicle.builder().licensePlate("A").make("M1").model("X1").build());
             vehicleRepository.save(Vehicle.builder().licensePlate("B").make("M2").model("X2").build());
 
-            mockMvc.perform(get("/api/vehicles/list"))
+            mockMvc.perform(get("/api/vehicles/list")
+                    .with(TestAuth.auth()))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
-                    .andExpect(jsonPath("$", hasSize(2)));
+                    .andExpect(jsonPath("$", hasSize(2)))
+                    .andExpect(jsonPath("$[0].licensePlate").value("A"))
+                    .andExpect(jsonPath("$[1].licensePlate").value("B"));
         }
     }
 
     @Nested
     @DisplayName("PUT /api/vehicles/{id}")
     class Update {
+
         @Test
         @DisplayName("updates existing vehicle and returns DTO")
         void updatesVehicle() throws Exception {
@@ -110,6 +117,7 @@ class VehicleControllerIT {
             patch.setMake("New");
 
             mockMvc.perform(put("/api/vehicles/" + existing.getId())
+                            .with(TestAuth.auth())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(patch)))
                     .andExpect(status().isOk())
@@ -124,12 +132,14 @@ class VehicleControllerIT {
     @Nested
     @DisplayName("DELETE /api/vehicles/{id}")
     class Delete {
+
         @Test
         @DisplayName("returns 204 and removes entity")
         void deletesVehicle() throws Exception {
             Vehicle existing = vehicleRepository.save(Vehicle.builder().licensePlate("Z").make("Make").model("Model").build());
 
-            mockMvc.perform(delete("/api/vehicles/" + existing.getId()))
+            mockMvc.perform(delete("/api/vehicles/" + existing.getId())
+                    .with(TestAuth.auth()))
                     .andExpect(status().isNoContent())
                     .andExpect(content().string(""));
 
@@ -140,13 +150,15 @@ class VehicleControllerIT {
     @Nested
     @DisplayName("Errors")
     class Errors {
+
         @Test
         @DisplayName("GET /api/vehicles/{id} not found -> 404 JSON error body")
         void getById_NotFound() throws Exception {
-            mockMvc.perform(get("/api/vehicles/999999"))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.status").value(404))
-                    .andExpect(jsonPath("$.error").value("Not Found"));
+            mockMvc.perform(get("/api/vehicles/999999")
+                    .with(TestAuth.auth()))
+                     .andExpect(status().isNotFound())
+                     .andExpect(jsonPath("$.status").value(404))
+                     .andExpect(jsonPath("$.error").value("Not Found"));
         }
 
         @Test
@@ -155,12 +167,13 @@ class VehicleControllerIT {
             VehicleRequest req = new VehicleRequest();
 
             mockMvc.perform(post("/api/vehicles")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
-                    .andExpect(jsonPath("$.status").value(400))
-                    .andExpect(jsonPath("$.error").value("Bad Request"));
+                            .with(TestAuth.auth())
+                             .contentType(MediaType.APPLICATION_JSON)
+                             .content(objectMapper.writeValueAsString(req)))
+                     .andExpect(status().isBadRequest())
+                     .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
+                     .andExpect(jsonPath("$.status").value(400))
+                     .andExpect(jsonPath("$.error").value("Bad Request"));
         }
 
         @Test
@@ -174,13 +187,14 @@ class VehicleControllerIT {
             req.setModel("3");
 
             mockMvc.perform(post("/api/vehicles")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isConflict())
-                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
-                    .andExpect(jsonPath("$.status").value(409))
-                    .andExpect(jsonPath("$.error").value("Conflict"))
-                    .andExpect(jsonPath("$.message", not(emptyOrNullString())));
+                            .with(TestAuth.auth())
+                             .contentType(MediaType.APPLICATION_JSON)
+                             .content(objectMapper.writeValueAsString(req)))
+                     .andExpect(status().isConflict())
+                     .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
+                     .andExpect(jsonPath("$.status").value(409))
+                     .andExpect(jsonPath("$.error").value("Conflict"))
+                     .andExpect(jsonPath("$.message", not(emptyOrNullString())));
         }
 
         @Test
@@ -193,13 +207,14 @@ class VehicleControllerIT {
             patch.setLicensePlate("DUP-PLT");
 
             mockMvc.perform(put("/api/vehicles/" + existing.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(patch)))
-                    .andExpect(status().isConflict())
-                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
-                    .andExpect(jsonPath("$.status").value(409))
-                    .andExpect(jsonPath("$.error").value("Conflict"))
-                    .andExpect(jsonPath("$.message", not(emptyOrNullString())));
+                            .with(TestAuth.auth())
+                             .contentType(MediaType.APPLICATION_JSON)
+                             .content(objectMapper.writeValueAsString(patch)))
+                     .andExpect(status().isConflict())
+                     .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
+                     .andExpect(jsonPath("$.status").value(409))
+                     .andExpect(jsonPath("$.error").value("Conflict"))
+                     .andExpect(jsonPath("$.message", not(emptyOrNullString())));
         }
     }
 }

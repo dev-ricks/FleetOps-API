@@ -8,8 +8,10 @@ import com.fleetops.entity.Inspection;
 import com.fleetops.entity.Vehicle;
 import com.fleetops.exception.InspectionNotFoundException;
 import com.fleetops.service.InspectionService;
+import com.fleetops.test.TestAuth;
 import org.junit.jupiter.api.*;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -26,12 +28,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = InspectionController.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import({GlobalControllerExceptionHandler.class, ControllerTestConfig.class})
+@AutoConfigureMockMvc(addFilters = true)
+@Import({GlobalControllerExceptionHandler.class, ControllerTestConfig.class, com.fleetops.config.SecurityConfig.class})
 class InspectionControllerTest {
 
     @Autowired
@@ -43,23 +46,27 @@ class InspectionControllerTest {
     @Autowired
     private InspectionService inspectionService;
 
+    @BeforeEach
+    void setUp() {
+        Mockito.reset(inspectionService);
+    }
+
     @Nested
     @DisplayName("CRUD Operations")
     class CrudTests {
+
         @Test
         @DisplayName("GET /api/inspections/{id} returns an inspection")
         void getById() throws Exception {
             Vehicle v = Vehicle.builder().id(1L).licensePlate("ABC123").make("Toyota").model("Corolla").build();
-            Inspection i = Inspection.builder().id(3L).inspectionDate(java.time.LocalDate.of(2024,1,1)).status("PASS").vehicle(v).build();
+            Inspection i = Inspection.builder().id(3L).inspectionDate(java.time.LocalDate.of(2024, 1, 1)).status("PASS")
+                                     .vehicle(v).build();
             given(inspectionService.getById(3L)).willReturn(i);
 
-            mockMvc.perform(get("/api/inspections/3"))
-                    .andExpect(status().isOk())
-                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
-                    .andExpect(jsonPath("$.id").value(3))
-                    .andExpect(jsonPath("$.inspectionDate").value("2024-01-01"))
-                    .andExpect(jsonPath("$.status").value("PASS"))
-                    .andExpect(jsonPath("$.vehicle.id").value(1));
+            mockMvc.perform(get("/api/inspections/3").with(TestAuth.auth())).andExpect(status().isOk())
+                   .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
+                   .andExpect(jsonPath("$.id").value(3)).andExpect(jsonPath("$.inspectionDate").value("2024-01-01"))
+                   .andExpect(jsonPath("$.status").value("PASS")).andExpect(jsonPath("$.vehicle.id").value(1));
 
             verify(inspectionService).getById(3L);
         }
@@ -67,30 +74,27 @@ class InspectionControllerTest {
         @Test
         @DisplayName("GET /api/inspections/{id} not found -> 404 JSON body")
         void getById_NotFound() throws Exception {
-            given(inspectionService.getById(404L)).willThrow(new InspectionNotFoundException("Inspection not found"));
+            given(inspectionService.getById(3L)).willThrow(new InspectionNotFoundException("Inspection not found"));
 
-            mockMvc.perform(get("/api/inspections/404"))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.status").value(404))
-                    .andExpect(jsonPath("$.error").value("Not Found"))
-                    .andExpect(jsonPath("$.message").value(containsString("Inspection not found")));
+            mockMvc.perform(get("/api/inspections/3").with(TestAuth.auth())).andExpect(status().isNotFound())
+                   .andExpect(jsonPath("$.status").value(404)).andExpect(jsonPath("$.error").value("Not Found"))
+                   .andExpect(jsonPath("$.message").value(containsString("Inspection not found")));
+
+            verify(inspectionService).getById(3L);
         }
 
         @Test
         @DisplayName("GET /api/inspections/list returns list of inspections")
         void list() throws Exception {
             List<Inspection> inspections = List.of(
-                    Inspection.builder().id(1L).inspectionDate(LocalDate.of(2024,1,1)).status("PASS").build(),
-                    Inspection.builder().id(2L).inspectionDate(LocalDate.of(2024,2,2)).status("FAIL").build()
-            );
+                    Inspection.builder().id(1L).inspectionDate(LocalDate.of(2024, 1, 1)).status("PASS").build(),
+                    Inspection.builder().id(2L).inspectionDate(LocalDate.of(2024, 2, 2)).status("FAIL").build());
             given(inspectionService.getAll()).willReturn(inspections);
 
-            mockMvc.perform(get("/api/inspections/list"))
-                    .andExpect(status().isOk())
-                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
-                    .andExpect(jsonPath("$", hasSize(2)))
-                    .andExpect(jsonPath("$[0].id").value(1))
-                    .andExpect(jsonPath("$[1].id").value(2));
+            mockMvc.perform(get("/api/inspections/list").with(TestAuth.auth())).andExpect(status().isOk())
+                   .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
+                   .andExpect(jsonPath("$", hasSize(2))).andExpect(jsonPath("$[0].id").value(1))
+                   .andExpect(jsonPath("$[1].id").value(2));
 
             verify(inspectionService).getAll();
         }
@@ -106,9 +110,11 @@ class InspectionControllerTest {
                                          .build();
             given(inspectionService.create(any(InspectionRequest.class))).willReturn(saved);
 
-            mockMvc.perform(post("/api/inspections").contentType(MediaType.APPLICATION_JSON)
-                                                    .content(objectMapper.writeValueAsString(payload)))
-                   .andExpect(status().isCreated()).andExpect(header().string("Location", endsWith("/api/inspections/10")))
+            mockMvc.perform(
+                           post("/api/inspections").with(TestAuth.auth()).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                                                   .content(objectMapper.writeValueAsString(payload)))
+                   .andExpect(status().isCreated())
+                   .andExpect(header().string("Location", endsWith("/api/inspections/10")))
                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
                    .andExpect(jsonPath("$.id").value(10)).andExpect(jsonPath("$.status").value("PENDING"));
 
@@ -129,8 +135,9 @@ class InspectionControllerTest {
                                            .build();
             given(inspectionService.update(eq(5L), any(Inspection.class))).willReturn(updated);
 
-            mockMvc.perform(put("/api/inspections/5").contentType(MediaType.APPLICATION_JSON)
-                                                     .content(objectMapper.writeValueAsString(patch)))
+            mockMvc.perform(
+                           put("/api/inspections/5").with(TestAuth.auth()).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                                                    .content(objectMapper.writeValueAsString(patch)))
                    .andExpect(status().isOk())
                    .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
                    .andExpect(jsonPath("$.id").value(5)).andExpect(jsonPath("$.status").value("UPDATED"));
@@ -144,43 +151,43 @@ class InspectionControllerTest {
         void update_NotFound() throws Exception {
             InspectionUpdateRequest patch = new InspectionUpdateRequest();
             patch.setStatus("UPDATED");
-            given(inspectionService.update(eq(404L), any(Inspection.class))).willThrow(new InspectionNotFoundException("Inspection not found"));
-            mockMvc.perform(put("/api/inspections/404")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(patch)))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.status").value(404))
-                    .andExpect(jsonPath("$.error").value("Not Found"))
-                    .andExpect(jsonPath("$.message").value(containsString("Inspection not found")));
+            given(inspectionService.update(eq(404L), any(Inspection.class))).willThrow(
+                    new InspectionNotFoundException("Inspection not found"));
+            mockMvc.perform(put("/api/inspections/404").with(TestAuth.auth()).with(csrf())
+                                                       .contentType(MediaType.APPLICATION_JSON)
+                                                       .content(objectMapper.writeValueAsString(patch)))
+                   .andExpect(status().isNotFound()).andExpect(jsonPath("$.status").value(404))
+                   .andExpect(jsonPath("$.error").value("Not Found"))
+                   .andExpect(jsonPath("$.message").value(containsString("Inspection not found")));
         }
 
         @Test
         @DisplayName("PUT /api/inspections/{id} returns 400 when invalid payload")
         void update_InvalidPayload() throws Exception {
             String invalidJson = "{}";
-            mockMvc.perform(put("/api/inspections/5")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(invalidJson))
-                    .andExpect(status().isBadRequest());
+            mockMvc.perform(
+                    put("/api/inspections/5").with(TestAuth.auth()).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                                             .content(invalidJson)).andExpect(status().isBadRequest());
         }
 
         @Test
         @DisplayName("DELETE /api/inspections/{id} deletes an inspection")
         void deleteInspection() throws Exception {
             doNothing().when(inspectionService).delete(7L);
-            mockMvc.perform(delete("/api/inspections/7")).andExpect(status().isNoContent()).andExpect(content().string(""));
+            mockMvc.perform(delete("/api/inspections/7").with(TestAuth.auth()).with(csrf()))
+                   .andExpect(status().isNoContent()).andExpect(content().string(""));
             verify(inspectionService).delete(7L);
         }
 
         @Test
         @DisplayName("DELETE /api/inspections/{id} returns 404 when inspection not found")
         void deleteInspection_NotFound() throws Exception {
-            org.mockito.Mockito.doThrow(new InspectionNotFoundException("Inspection not found")).when(inspectionService).delete(404L);
-            mockMvc.perform(delete("/api/inspections/404"))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.status").value(404))
-                    .andExpect(jsonPath("$.error").value("Not Found"))
-                    .andExpect(jsonPath("$.message").value(containsString("Inspection not found")));
+            org.mockito.Mockito.doThrow(new InspectionNotFoundException("Inspection not found")).when(inspectionService)
+                               .delete(404L);
+            mockMvc.perform(delete("/api/inspections/404").with(TestAuth.auth()).with(csrf()))
+                   .andExpect(status().isNotFound()).andExpect(jsonPath("$.status").value(404))
+                   .andExpect(jsonPath("$.error").value("Not Found"))
+                   .andExpect(jsonPath("$.message").value(containsString("Inspection not found")));
         }
     }
 
@@ -190,18 +197,26 @@ class InspectionControllerTest {
         @Test
         @DisplayName("getInspection_shouldReturn401_whenNoJwtProvided")
         void getInspection_shouldReturn401_whenNoJwtProvided() throws Exception {
-            // Arrange: No JWT token
-            // Act: Perform GET request to /api/inspections/1
-            mockMvc.perform(get("/api/inspections/1"))
-                // Assert: Should return 401 Unauthorized
-                .andExpect(status().isUnauthorized());
+            mockMvc.perform(get("/api/inspections/1")).andExpect(status().isUnauthorized());
         }
+
         @Test
         @DisplayName("getInspection_shouldReturn403_whenJwtLacksRole")
-        @org.springframework.security.test.context.support.WithMockUser(roles = "USER") // Assuming ADMIN is required
         void getInspection_shouldReturn403_whenJwtLacksRole() throws Exception {
-            mockMvc.perform(get("/api/inspections/1"))
-                .andExpect(status().isForbidden());
+            // Arrange: make service return something if controller is executed
+            given(inspectionService.getById(1L)).willReturn(Inspection.builder().id(1L).status("PASS").build());
+
+            mockMvc.perform(get("/api/inspections/1").with(TestAuth.auth("ROLE_RESTRICTED")))
+                   .andExpect(status().isForbidden());
+
+            // ensure service wasn't called when access denied
+            Mockito.verify(inspectionService, Mockito.never()).getById(1L);
+        }
+
+        @Test
+        @DisplayName("getInspection_shouldReturn200_whenJwtHasUserRole")
+        void getInspection_shouldReturn200_whenJwtHasUserRole() throws Exception {
+            mockMvc.perform(get("/api/inspections/1").with(TestAuth.auth())).andExpect(status().isOk());
         }
     }
 
@@ -214,11 +229,9 @@ class InspectionControllerTest {
             // Arrange: Invalid payload (missing required fields)
             String invalidJson = "{}";
             // Act: Perform POST request
-            mockMvc.perform(post("/api/inspections")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(invalidJson))
-                // Assert: Should return 400 Bad Request
-                .andExpect(status().isBadRequest());
+            mockMvc.perform(post("/api/inspections").with(TestAuth.auth()).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(invalidJson))
+                   // Assert: Should return 400 Bad Request
+                   .andExpect(status().isBadRequest());
         }
     }
 
@@ -229,11 +242,12 @@ class InspectionControllerTest {
         @DisplayName("getInspection_shouldReturn404_whenInspectionNotFound")
         void getInspection_shouldReturn404_whenInspectionNotFound() throws Exception {
             // Arrange: Mock service to throw not found
-            given(inspectionService.getById(999L)).willThrow(new com.fleetops.exception.InspectionNotFoundException("Not found"));
+            given(inspectionService.getById(999L)).willThrow(
+                    new com.fleetops.exception.InspectionNotFoundException("Not found"));
             // Act: Perform GET request
-            mockMvc.perform(get("/api/inspections/999"))
-                // Assert: Should return 404 Not Found
-                .andExpect(status().isNotFound());
+            mockMvc.perform(get("/api/inspections/999").with(TestAuth.auth()))
+                   // Assert: Should return 404 Not Found
+                   .andExpect(status().isNotFound());
         }
     }
 }

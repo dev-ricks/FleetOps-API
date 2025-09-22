@@ -18,6 +18,7 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
+import com.fleetops.test.TestAuth;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -57,6 +58,7 @@ class InspectionControllerIT {
             req.setVehicleId(v.getId());
 
             String response = mockMvc.perform(post("/api/inspections")
+                            .with(TestAuth.auth())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isCreated())
@@ -84,7 +86,8 @@ class InspectionControllerIT {
             Vehicle v = vehicleRepository.save(Vehicle.builder().licensePlate("V1").make("M").model("X").build());
             Inspection i = inspectionRepository.save(Inspection.builder().inspectionDate(LocalDate.of(2024,1,1)).status("PASS").vehicle(v).build());
 
-            mockMvc.perform(get("/api/inspections/" + i.getId()))
+            mockMvc.perform(get("/api/inspections/" + i.getId())
+                    .with(TestAuth.auth()))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Type", containsString(MediaType.APPLICATION_JSON_VALUE)))
                     .andExpect(jsonPath("$.id").value(i.getId()))
@@ -97,6 +100,7 @@ class InspectionControllerIT {
     @Nested
     @DisplayName("PUT /api/inspections/{id}")
     class Update {
+
         @Test
         @DisplayName("updates fields and returns DTO")
         void updatesInspection() throws Exception {
@@ -107,6 +111,7 @@ class InspectionControllerIT {
             patch.put("status", "DONE");
 
             mockMvc.perform(put("/api/inspections/" + i.getId())
+                            .with(TestAuth.auth())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(patch.toString()))
                     .andExpect(status().isOk())
@@ -121,13 +126,15 @@ class InspectionControllerIT {
     @Nested
     @DisplayName("DELETE /api/inspections/{id}")
     class Delete {
+
         @Test
         @DisplayName("returns 204 and removes entity")
         void deletesInspection() throws Exception {
             Vehicle v = vehicleRepository.save(Vehicle.builder().licensePlate("V1").make("M").model("X").build());
             Inspection i = inspectionRepository.save(Inspection.builder().inspectionDate(LocalDate.now()).status("PENDING").vehicle(v).build());
 
-            mockMvc.perform(delete("/api/inspections/" + i.getId()))
+            mockMvc.perform(delete("/api/inspections/" + i.getId())
+                    .with(TestAuth.auth()))
                     .andExpect(status().isNoContent())
                     .andExpect(content().string(""));
 
@@ -138,10 +145,12 @@ class InspectionControllerIT {
     @Nested
     @DisplayName("Errors")
     class Errors {
+
         @Test
         @DisplayName("GET /api/inspections/{id} not found -> 404 JSON error body")
         void getById_NotFound() throws Exception {
-            mockMvc.perform(get("/api/inspections/999999"))
+            mockMvc.perform(get("/api/inspections/999999")
+                    .with(TestAuth.auth()))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404))
                     .andExpect(jsonPath("$.error").value("Not Found"));
@@ -153,6 +162,7 @@ class InspectionControllerIT {
             com.fasterxml.jackson.databind.node.ObjectNode bad = objectMapper.createObjectNode();
             // missing required fields
             mockMvc.perform(post("/api/inspections")
+                            .with(TestAuth.auth())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(bad.toString()))
                     .andExpect(status().isBadRequest())
