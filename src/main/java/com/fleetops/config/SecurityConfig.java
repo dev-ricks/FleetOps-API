@@ -29,7 +29,6 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // TODO: remove /actuator/** and /api/** pass throughs to skip security for development
                         // Allow unauthenticated access to basic actuator health (no details due to app config)
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info", "/actuator/**").hasRole("ADMIN")
                         .requestMatchers("/api/inspections/**", "/api/vehicles/**", "/api/drivers/**").hasAnyRole("ADMIN","USER")
