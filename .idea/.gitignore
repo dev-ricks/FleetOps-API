@@ -13,3 +13,7 @@
 copilot*.*
 copilot.data.migration.ask2agent.xml
 copilot.data.migration.ask.xml
+# Zencoder local files
+/zencoder/chats
+/zencoder-chat-index.xml
+/zencoder-chats-dedicated.xml
