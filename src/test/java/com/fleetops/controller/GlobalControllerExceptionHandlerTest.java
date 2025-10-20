@@ -2,9 +2,11 @@ package com.fleetops.controller;
 
 import com.fleetops.exception.LicensePlateAlreadyExistsException;
 import com.fleetops.exception.NotFoundExceptionBase;
+import com.fleetops.exception.ServiceException;
 import jakarta.validation.Valid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -35,7 +37,9 @@ class GlobalControllerExceptionHandlerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message", containsString("missing")));
+                .andExpect(jsonPath("$.message", containsString("missing")))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.path").exists());
     }
 
     @Test
@@ -43,7 +47,9 @@ class GlobalControllerExceptionHandlerTest {
         mockMvc.perform(get("/throw/conflict"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
-                .andExpect(jsonPath("$.error").value("Conflict"));
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.path").exists());
     }
 
     @Test
@@ -51,7 +57,9 @@ class GlobalControllerExceptionHandlerTest {
         mockMvc.perform(get("/throw/runtime"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status").value(500))
-                .andExpect(jsonPath("$.error").value("Internal Server Error"));
+                .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.path").exists());
     }
 
     @Test
@@ -63,7 +71,10 @@ class GlobalControllerExceptionHandlerTest {
                         .content(json))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"));
+                .andExpect(jsonPath("$.error").value("Validation Failed"))
+                .andExpect(jsonPath("$.fieldErrors").exists())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.path").exists());
     }
 
     @Test
@@ -71,7 +82,10 @@ class GlobalControllerExceptionHandlerTest {
         mockMvc.perform(get("/throw/constraint/-1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"));
+                .andExpect(jsonPath("$.error").value("Constraint Violation"))
+                .andExpect(jsonPath("$.violations").exists())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.path").exists());
     }
 
     @Test
@@ -82,7 +96,29 @@ class GlobalControllerExceptionHandlerTest {
                         .content(badJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"));
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void serviceException_IsMappedTo500Json() throws Exception {
+        mockMvc.perform(get("/throw/service"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void dataIntegrityViolation_IsMappedTo409Json() throws Exception {
+        mockMvc.perform(get("/throw/dataintegrity"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.path").exists());
     }
 
     // Minimal controller solely for triggering exceptions handled by the advice
@@ -105,6 +141,12 @@ class GlobalControllerExceptionHandlerTest {
         public String constraint(@PathVariable long id) {
             throw new jakarta.validation.ConstraintViolationException("invalid", java.util.Collections.emptySet());
         }
+
+        @GetMapping("/throw/service")
+        public String service() { throw new ServiceException("Service failed", new RuntimeException("Database error")); }
+
+        @GetMapping("/throw/dataintegrity")
+        public String dataIntegrity() { throw new DataIntegrityViolationException("Data constraint violated"); }
     }
 
     private static class SampleDto {
