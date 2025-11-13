@@ -1,12 +1,12 @@
 package com.fleetops.controller;
 
-import com.fleetops.dto.DriverRequest;
-import com.fleetops.dto.DriverResponse;
+import com.fleetops.dto.*;
 import com.fleetops.entity.Driver;
 import com.fleetops.service.DriverService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -21,6 +21,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping(value = "/api/drivers", produces = MediaType.APPLICATION_JSON_VALUE)
+@PreAuthorize("hasAnyRole('ADMIN','USER')")
 public class DriverController {
 
     private final DriverService service;
@@ -80,7 +81,7 @@ public class DriverController {
      * @return HTTP 200 with updated {@link DriverResponse}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<DriverResponse> update(@PathVariable Long id, @RequestBody DriverRequest request) {
+    public ResponseEntity<DriverResponse> update(@PathVariable Long id, @Valid @RequestBody DriverUpdateRequest request) {
         Driver patch = new Driver();
         if (request.getName() != null) {
             patch.setName(request.getName());

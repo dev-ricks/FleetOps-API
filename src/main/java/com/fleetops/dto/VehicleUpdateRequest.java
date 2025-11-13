@@ -1,20 +1,24 @@
 package com.fleetops.dto;
 
 import com.fleetops.validation.annotation.AtLeastOneFieldNotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-import java.time.LocalDate;
-
 /**
- * Partial update payload for an existing inspection.
+ * Partial update payload for an existing vehicle.
  * <p>
  * All fields are optional; but at least one field needs to be populated; the service layer applies only non-null values.
  */
 @Data
 @AtLeastOneFieldNotNull
-public class InspectionUpdateRequest {
+public class VehicleUpdateRequest {
 
-    private LocalDate inspectionDate;
-    private String status;
-    private Long vehicleId;
+    @Size(max = 20)
+    private String licensePlate;
+
+    @Size(max = 50)
+    private String make;
+
+    @Size(max = 50)
+    private String model;
 }

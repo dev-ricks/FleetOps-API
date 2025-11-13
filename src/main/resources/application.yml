@@ -1,12 +1,14 @@
-
 spring:
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.xml
     enabled: true
   datasource:
     url: jdbc:postgresql://localhost:5432/fleetops
-    username: postgres
-    password: postgres
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:}
+    # vars for linux as example to run in terminal before starting app:
+    # export DB_USERNAME=postgres
+    # export DB_PASSWORD='strong_generated_value'
   jpa:
     hibernate:
       ddl-auto: update

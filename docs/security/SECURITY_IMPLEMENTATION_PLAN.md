@@ -1,6 +1,5 @@
 # Security Implementation Plan—FleetOps API
 
-This document provides a detailed, actionable plan for implementing and maturing security in the FleetOps API. The plan is structured in phases, each with clear objectives, deliverables, and success criteria. It is designed to ensure that security requirements are met, risks are managed, and compliance is achieved as the system evolves.
 
 ## Document Control
 | Property         | Value        |
@@ -36,12 +35,10 @@ The implementation plan is divided into four phases, each building on the previo
 - All endpoints require valid JWT tokens.
 - Input validation and error handling in place.
 - Hardened server and network configuration.
-- Security headers present in all responses.
 - Rate limiting active on public endpoints.
 
 **Success Criteria:**
 - No unauthenticated access to protected resources.
-- All input is validated and sanitized.
 - Security headers verified in responses.
 - Rate limiting tested and effective.
 
@@ -53,16 +50,10 @@ The implementation plan is divided into four phases, each building on the previo
 - Enhance API security with additional controls (e.g., CORS, request size limits).
 
 **Deliverables:**
-- Database encryption enabled for sensitive fields.
-- TLS enforced for all communications.
-- Security logs and audit trails available for review.
-- Role-based access control (RBAC) fully implemented.
-- Additional API security controls in place.
 
 **Success Criteria:**
 - Sensitive data is encrypted at rest and in transit.
 - Security events are logged and auditable.
-- RBAC tested for all roles and permissions.
 - API passes security testing for new controls.
 
 ### Phase 3: Comprehensive Security (Months 2–3)
@@ -74,15 +65,11 @@ The implementation plan is divided into four phases, each building on the previo
 
 **Deliverables:**
 - Privacy controls operational for PII and sensitive data.
-- Automated security tests and scans in CI/CD pipeline.
 - Penetration test reports and remediation plans.
-- Incident response playbooks and monitoring in place.
 
 **Success Criteria:**
 - Compliance requirements (e.g., GDPR, SOC 2) are met.
 - No critical vulnerabilities in production.
-- Incident response tested and documented.
-- Privacy controls verified in logs and data exports.
 
 ### Phase 4: Security Maturity (Months 4–6 and ongoing)
 **Objective:** Achieve continuous improvement and operational resilience.
@@ -93,7 +80,6 @@ The implementation plan is divided into four phases, each building on the previo
 
 **Deliverables:**
 - Real-time monitoring and alerting dashboards.
-- Security training and awareness materials delivered to all staff.
 - Updated security documentation and audit evidence.
 - Regular review and improvement of security controls.
 
