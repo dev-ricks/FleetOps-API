@@ -1,9 +1,11 @@
+# Maven
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
 ### IntelliJ IDEA ###
+.idea/
 .idea/modules.xml
 .idea/jarRepositories.xml
 .idea/compiler.xml
@@ -12,6 +14,17 @@ target/
 *.iws
 *.iml
 *.ipr
+# Explicitly ignore Copilot migration tasks
+.idea/copilot.data.migration*
+# Optional: allow only shared settings
+# Uncomment if your team wants to share these
+# !.idea/
+# !.idea/codeStyles/
+# !.idea/codeStyles/*
+# !.idea/inspectionProfiles/
+# !.idea/inspectionProfiles/*
+# !.idea/runConfigurations/
+# !.idea/runConfigurations/*
 
 ### Eclipse ###
 .apt_generated
@@ -40,3 +53,5 @@ build/
 
 ### My Project Files ###
 /scripts/
+src/main/resources/application-local.yml
+.env
