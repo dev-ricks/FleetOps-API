@@ -18,7 +18,6 @@ spring:
       resourceserver:
         jwt:
             jwk-set-uri: http://localhost:8081/.well-known/jwks.json
-        enabled: true # tests override to false to prevent remote JWKS call
 
 server:
   port: 8080
